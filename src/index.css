@@ -35,3 +35,16 @@
   pointer-events: none;
   z-index: 20;
 }
+
+@font-face {
+  font-family: 'Childos Arabic';
+  src: url('./assets/fonts/ChildosArabic.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Custom utility class for Tailwind */
+.font-childos {
+  font-family: 'Childos Arabic', system-ui, sans-serif;
+}

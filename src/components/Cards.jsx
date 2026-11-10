@@ -3,19 +3,37 @@ import React, { useState } from 'react';
 export function GreenCard({ text, pick, pack }) {
   return (
     <div 
-      style={{ width: '320px', height: '208px', minWidth: '320px', minHeight: '208px' }}
-      className="bg-emerald-900 text-white p-6 rounded-3xl shadow-xl flex flex-col justify-between border-4 border-dashed border-emerald-400 select-none shrink-0"
+      className="relative flex flex-col justify-between select-none shrink-0 rounded-3xl shadow-xl overflow-hidden bg-[#b2ec9b] p-6 font-childos"
+      style={{ 
+        width: '360px', 
+        height: '240px',
+        minWidth: '360px',
+        minHeight: '240px'
+      }}
     >
-      <div className="flex justify-between items-center text-xs font-bold text-emerald-200">
+      {/* Background Image Layer */}
+      <div 
+        className="absolute inset-0 z-0 bg-contain bg-center bg-no-repeat pointer-events-none"
+        style={{ backgroundImage: `url('/green-card-bg.png')` }}
+      />
+
+      {/* Top Bar Metadata */}
+      <div className="relative z-10 flex justify-between items-center text-[11px] font-black tracking-wider text-black px-4 pt-1">
         <span>JUDGY PROMPT</span>
         <span>{pack || 'CORE'}</span>
       </div>
-      <div className="text-xl font-black text-center my-auto">
-        {text}
+
+      {/* Center Topic Text */}
+      <div className="relative z-10 flex items-center justify-center my-auto px-10 text-center">
+        <span className="text-base font-black text-black leading-snug tracking-tight">
+          {text}
+        </span>
       </div>
-      <div className="flex justify-between items-center text-xs font-bold text-emerald-200">
+
+      {/* Bottom Bar Metadata */}
+      <div className="relative z-10 flex justify-between items-center text-[11px] font-black tracking-wider text-black px-4 pb-1">
         <span>CORE PACK</span>
-        <span>PICK {pick || 1}</span>
+        <span>PICK {pick || 3}</span>
       </div>
     </div>
   );
@@ -47,7 +65,7 @@ export function PurpleCard({ text, jp, selected, onClick }) {
         placeItems: 'center',
         position: 'relative'
       }}
-      className={`cursor-pointer transition-all duration-200 select-none rounded-2xl shadow-lg shrink-0 p-4 ${
+      className={`cursor-pointer transition-all duration-200 select-none rounded-2xl shadow-lg shrink-0 p-4 font-childos ${
         selected 
           ? 'ring-4 ring-emerald-500 scale-105 shadow-2xl' 
           : 'hover:scale-105'
@@ -81,7 +99,7 @@ export function PurpleCard({ text, jp, selected, onClick }) {
       {/* Center Text Area */}
       <div className="text-center px-6 z-10 w-full">
         <span 
-          className="purple-card-text text-xs font-black tracking-tight leading-snug break-words block"
+          className="purple-card-text text-sm font-black tracking-tight leading-snug break-words block"
         >
           {text}
         </span>
