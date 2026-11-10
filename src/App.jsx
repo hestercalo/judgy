@@ -36,11 +36,13 @@ export default function App() {
             pack: row.pack || 'Classic'
           }));
 
+        // 1. UPDATED: Added `jp: row.jp || ''` here so it grabs the translation from OpenSheet
         const cleanPurple = purpleData
           .filter(row => row.text && row.text.toLowerCase() !== 'text')
           .map(row => ({
             id: row.id,
             text: row.text,
+            jp: row.jp || '',
             pack: row.pack || 'Classic'
           }));
 
@@ -189,10 +191,9 @@ export default function App() {
       k => roomData.players[k].name === playerName
     );
 
-    // Storing without player name linked to the specific submission node visible to judges
+    // Store both text and jp translation in Firebase submissions so the judge can see it too
     await set(ref(db, `rooms/${currentRoom}/submissions/${playerKey}`), {
-      cardTexts: selectedCards.map(c => c.text),
-      // We still store winnerKey or playerKey internally if needed, but remove playerName display
+      cards: selectedCards.map(c => ({ text: c.text, jp: c.jp })),
       playerKey: playerKey 
     });
 
@@ -386,14 +387,15 @@ export default function App() {
                   className="bg-zinc-900 border-2 border-zinc-700 hover:border-purple-500 p-4 rounded-xl cursor-pointer transition-all flex flex-col gap-2 max-w-xs shadow-lg"
                 >
                   <div className="flex flex-col gap-2">
-                    {sub.cardTexts?.map((txt, i) => (
+                    {sub.cards?.map((cardObj, i) => (
                       <div key={i} className="relative">
-                        {sub.cardTexts.length > 1 && (
-                          <span className="absolute -top-2 -left-2 bg-purple-600 text-white font-bold w-6 h-6 rounded-full flex items-center justify-center text-xs shadow">
+                        {sub.cards.length > 1 && (
+                          <span className="absolute -top-2 -left-2 bg-purple-600 text-white font-bold w-6 h-6 rounded-full flex items-center justify-center text-xs shadow z-10">
                             {i + 1}
                           </span>
                         )}
-                        <PurpleCard text={txt} selected={false} />
+                        {/* 2. UPDATED: Passed jp={cardObj.jp} to judge view */}
+                        <PurpleCard text={cardObj.text} jp={cardObj.jp} selected={false} />
                       </div>
                     ))}
                   </div>
@@ -436,8 +438,10 @@ export default function App() {
                       {selectedIndex + 1}
                     </span>
                   )}
+                  {/* 3. UPDATED: Passed jp={card.jp} to player hand cards */}
                   <PurpleCard 
                     text={card.text} 
+                    jp={card.jp}
                     pack={card.pack}
                     selected={isSelected}
                     onClick={() => handleCardClick(card)}
@@ -447,7 +451,7 @@ export default function App() {
             })}
           </div>
 
-       {selectedCards.length === requiredPick && (
+         {selectedCards.length === requiredPick && (
             <button 
               onClick={handleSubmitCard}
               className="mt-6 bg-emerald-600 hover:bg-emerald-500 font-bold px-8 py-3 rounded-xl text-lg shadow-lg transition-transform hover:scale-105"

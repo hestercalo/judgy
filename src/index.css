@@ -1,3 +1,37 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Tooltip styles for Purple Cards */
+.card[data-jp]:not([data-jp=""]):hover::after,
+.card[data-jp]:not([data-jp=""]):focus::after {
+  content: attr(data-jp);
+  position: absolute;
+  bottom: 108%;
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background-color: #1f2937;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  z-index: 20;
+}
+
+.card[data-jp]:not([data-jp=""]):hover::before,
+.card[data-jp]:not([data-jp=""]):focus::before {
+  content: '';
+  position: absolute;
+  bottom: 96%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: #1f2937 transparent transparent transparent;
+  pointer-events: none;
+  z-index: 20;
+}
