@@ -391,7 +391,6 @@ export default function App() {
           <button 
             onClick={async () => {
               await update(ref(db, `rooms/${currentRoom}`), { status: 'lobby', winner: null, submissions: null });
-              // Reset scores
               const resetPlayers = {};
               Object.entries(roomData.players || {}).forEach(([k, p]) => {
                 resetPlayers[k] = { ...p, score: 0 };
@@ -435,8 +434,6 @@ export default function App() {
         {roomData.currentGreen && (
           <GreenCard 
             text={roomData.currentGreen.text} 
-            pack={roomData.currentGreen.pack} 
-            pick={requiredPick} 
           />
         )}
       </div>
@@ -447,7 +444,7 @@ export default function App() {
           <div className="w-full max-w-4xl flex flex-col items-center mb-8">
             <h3 className="text-xl font-bold text-purple-300 mb-2">Select the winning combo!</h3>
             <p className="text-zinc-400 text-sm mb-6">All submissions are in. Click your favorite combination below to award a point:</p>
-            <div className="flex flex-wrap gap-6 justify-center">
+            <div className="flex flex-wrap gap-8 justify-center">
               {Object.entries(roomData.submissions || {}).map(([playerKey, sub]) => (
                 <div 
                   key={playerKey} 
@@ -489,7 +486,7 @@ export default function App() {
           </div>
 
           <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-4">Submitted Cards (Waiting to Reveal)</h4>
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="flex flex-wrap justify-center gap-6">
             {Array.from({ length: submissionsCount }).map((_, idx) => (
               <CardBack key={idx} />
             ))}
@@ -510,7 +507,7 @@ export default function App() {
           </div>
 
           <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-4">Table Status</h4>
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="flex flex-wrap justify-center gap-6">
             {Array.from({ length: submissionsCount }).map((_, idx) => (
               <CardBack key={idx} />
             ))}
@@ -522,7 +519,7 @@ export default function App() {
           <h3 className="text-lg font-bold text-zinc-300 mb-4">
             Select {requiredPick} card{requiredPick > 1 ? 's' : ''} from your hand:
           </h3>
-          <div className="flex flex-wrap gap-4 justify-center">
+          <div className="flex flex-wrap gap-6 justify-center">
             {playerHand.map((card) => {
               const selectedIndex = selectedCards.findIndex(c => c.uniqueKey === card.uniqueKey);
               const isSelected = selectedIndex !== -1;
@@ -545,16 +542,39 @@ export default function App() {
             })}
           </div>
 
-         {selectedCards.length === requiredPick && (
-            <button 
-              onClick={handleSubmitCard}
-              className="mt-6 bg-emerald-600 hover:bg-emerald-500 font-bold px-8 py-3 rounded-xl text-lg shadow-lg transition-transform hover:scale-105"
-            >
-              {requiredPick > 1 ? 'Submit Combination' : 'Submit Card'}
-            </button>
+          {selectedCards.length === requiredPick && (
+            <div className="mt-8">
+              <SubmitButton 
+                onClick={handleSubmitCard} 
+                label={requiredPick > 1 ? 'SUBMIT COMBINATION' : 'SUBMIT CARD'} 
+              />
+            </div>
           )}
         </div>
       )}
     </div>
+  );
+}
+
+// --- COMIC-STYLED SUBMIT BUTTON COMPONENT ---
+function SubmitButton({ onClick, disabled, label = "SUBMIT CARD" }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`px-8 py-3 text-xl sm:text-2xl font-black rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all duration-150 select-none ${
+        disabled
+          ? 'bg-zinc-400 text-zinc-700 opacity-50 cursor-not-allowed shadow-none'
+          : 'bg-emerald-400 hover:bg-emerald-300 active:translate-x-1 active:translate-y-1 active:shadow-none text-black cursor-pointer'
+      }`}
+      style={{
+        fontFamily: "'Childos Arabic', system-ui, sans-serif",
+        WebkitTextStroke: '1px #ffffff',
+        paintOrder: 'stroke fill',
+      }}
+    >
+      {label}
+    </button>
   );
 }

@@ -1,15 +1,39 @@
 import React, { useState } from 'react';
 
-export function GreenCard({ text, pick, pack }) {
+// Helper to isolate numbers so Childos doesn't render Eastern Arabic numerals (٣)
+function renderFormattedText(text) {
+  if (!text) return null;
+  const parts = text.split(/(\d+)/);
+  return parts.map((part, index) => {
+    if (/^\d+$/.test(part)) {
+      return (
+        <span 
+          key={index} 
+          style={{ 
+            fontFamily: 'system-ui, -apple-system, sans-serif', 
+            WebkitTextStroke: '0px transparent',
+            fontSize: 'inherit' 
+          }}
+          className="inline-block px-1 text-black font-sans font-black"
+        >
+          {part}
+        </span>
+      );
+    }
+    return part;
+  });
+}
+
+export function GreenCard({ text }) {
   const bgPath = `${import.meta.env.BASE_URL}green-card-bg.png`;
 
   return (
     <div 
-      className="relative flex flex-col justify-between select-none shrink-0 rounded-3xl shadow-xl overflow-hidden p-6"
+      className="card relative flex flex-col justify-center items-center select-none shrink-0 rounded-3xl shadow-xl overflow-hidden p-6"
       style={{ 
-        width: '360px', 
-        minWidth: '360px',
-        minHeight: '240px',
+        width: '440px', 
+        minWidth: '440px',
+        minHeight: '300px',
         height: 'auto',
         backgroundImage: `url("${bgPath}")`,
         backgroundSize: '100% 100%',
@@ -18,23 +42,14 @@ export function GreenCard({ text, pick, pack }) {
         colorScheme: 'light'
       }}
     >
-      {/* Top Bar Metadata */}
-      <div className="relative z-10 flex justify-between items-center text-[11px] font-black tracking-wider text-black px-4 pt-1 font-sans">
-        <span>JUDGY PROMPT</span>
-        <span>{pack || 'Classic'}</span>
-      </div>
-
-      {/* Center Topic Text - Added font-childos here */}
-      <div className="relative z-10 flex items-center justify-center py-6 px-6 text-center my-auto">
-        <span className="font-childos text-base sm:text-lg font-bold text-black leading-snug tracking-tight break-words">
-          {text}
+      {/* Center Topic Text Only */}
+      <div className="relative z-10 flex items-center justify-center py-4 px-6 text-center w-full">
+        <span 
+          className="font-childos font-bold text-black leading-tight tracking-tight break-words whitespace-normal w-full block"
+          style={{ fontSize: '2.5rem' }}
+        >
+          {renderFormattedText(text)}
         </span>
-      </div>
-
-      {/* Bottom Bar Metadata */}
-      <div className="relative z-10 flex justify-between items-center text-[11px] font-black tracking-wider text-black px-4 pb-1 font-sans">
-        <span>CORE PACK</span>
-        <span>PICK {pick || 3}</span>
       </div>
     </div>
   );
@@ -80,8 +95,8 @@ export function PurpleCard({ text, jp, selected, onClick }) {
         backgroundSize: '100% 100%',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        width: '288px',
-        minHeight: '208px',
+        width: '340px',
+        minHeight: '240px',
         height: 'auto',
         display: 'flex',
         flexDirection: 'column',
@@ -90,7 +105,7 @@ export function PurpleCard({ text, jp, selected, onClick }) {
         position: 'relative',
         colorScheme: 'light'
       }}
-      className={`cursor-pointer transition-all duration-200 select-none rounded-2xl shadow-lg shrink-0 p-5 ${
+      className={`card cursor-pointer transition-all duration-200 select-none rounded-2xl shadow-lg shrink-0 p-6 ${
         selected 
           ? 'ring-4 ring-emerald-500 scale-105 shadow-2xl' 
           : 'hover:scale-105'
@@ -103,33 +118,40 @@ export function PurpleCard({ text, jp, selected, onClick }) {
         }
       `}</style>
 
-      {/* Top Bar: JP Toggle Button */}
-      <div style={{ position: 'absolute', top: '12px', right: '12px' }} className="z-20 font-sans">
+      {/* Top Bar: Scaled-up JP/EN Toggle Badge (~1.5x) */}
+      <div style={{ position: 'absolute', top: '10px', right: '10px' }} className="z-20 font-sans">
         {jp && (
           <button
             type="button"
             onClick={toggleJp}
-            className={`text-[9px] font-black px-2 py-0.5 rounded shadow-sm transition-all ${
+            className={`text-base font-black px-4 py-1.5 rounded-full border-3 border-black shadow-lg transition-transform duration-150 active:scale-95 ${
               showJp 
-                ? 'bg-purple-600 text-white' 
-                : 'bg-zinc-900 text-pink-200 hover:bg-zinc-800'
+                ? 'bg-purple-600 text-yellow-300 border-black' 
+                : 'bg-yellow-400 text-black hover:bg-yellow-300'
             }`}
+            style={{
+              fontFamily: "'Childos Arabic', system-ui, sans-serif",
+              WebkitTextStroke: '0.75px #000',
+            }}
           >
             {showJp ? 'EN' : 'JP'}
           </button>
         )}
       </div>
       
-      {/* Center Text Area - Added font-childos here */}
+      {/* Center Text Area */}
       <div className="text-center px-4 z-10 w-full py-2">
-        <span className="font-childos purple-card-text text-sm font-bold tracking-tight leading-snug break-words block">
-          {text}
+        <span 
+          className="font-childos purple-card-text font-bold tracking-tight leading-snug break-words whitespace-normal block w-full"
+          style={{ fontSize: '2rem' }}
+        >
+          {renderFormattedText(text)}
         </span>
         
         {showJp && jp && (
           <div 
-            style={{ color: '#581c87', WebkitTextFillColor: '#581c87' }}
-            className="mt-2 text-[11px] font-bold bg-white/95 border border-purple-300 px-2 py-0.5 rounded shadow-sm inline-block font-sans"
+            style={{ color: '#4c1d95', WebkitTextFillColor: '#4c1d95' }}
+            className="mt-3 text-sm font-black bg-yellow-300/95 border-2 border-purple-900 px-3.5 py-1 rounded-lg shadow-md inline-block font-sans"
           >
             {jp}
           </div>
