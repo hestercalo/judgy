@@ -38,13 +38,16 @@
 
 @font-face {
   font-family: 'Childos Arabic';
-  src: url('./assets/fonts/ChildosArabic.woff2') format('woff2');
+  src: local('Childos Arabic'),
+       local('ChildosArabic'),
+       url('/src/assets/fonts/ChildosArabic.otf') format('opentype');
   font-weight: 900;
   font-style: normal;
   font-display: swap;
 }
 
-/* Custom utility class for Tailwind */
+/* Enforce standard digits & fallback glyph mapping */
 .font-childos {
-  font-family: 'Childos Arabic', system-ui, sans-serif;
+  font-family: 'Childos Arabic', system-ui, -apple-system, sans-serif !important;
+  font-variant-numeric: lining-nums tabular-nums;
 }

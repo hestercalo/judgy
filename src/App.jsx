@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { GreenCard, PurpleCard } from './components/Cards';
+import { GreenCard, PurpleCard, CardBack } from './components/Cards';
 import { db } from './firebase';
-import { ref, set, get, child, onValue, update } from 'firebase/database';
+import { ref, set, get, child, update, onValue } from 'firebase/database';
 
 const SHEET_ID = '1ZMeRbwlUTBUHxoF1arWMCwHg-GfAB7jmJOh5mJlJnyA';
+const WINNING_SCORE = 7;
 
 export default function App() {
   const [greenCards, setGreenCards] = useState([]);
@@ -36,7 +37,6 @@ export default function App() {
             pack: row.pack || 'Classic'
           }));
 
-        // 1. UPDATED: Added `jp: row.jp || ''` here so it grabs the translation from OpenSheet
         const cleanPurple = purpleData
           .filter(row => row.text && row.text.toLowerCase() !== 'text')
           .map(row => ({
@@ -161,7 +161,8 @@ export default function App() {
       status: 'playing',
       currentGreen: randomGreen,
       judge: randomJudge,
-      submissions: null
+      submissions: null,
+      winner: null
     });
   };
 
@@ -191,7 +192,6 @@ export default function App() {
       k => roomData.players[k].name === playerName
     );
 
-    // Store both text and jp translation in Firebase submissions so the judge can see it too
     await set(ref(db, `rooms/${currentRoom}/submissions/${playerKey}`), {
       cards: selectedCards.map(c => ({ text: c.text, jp: c.jp })),
       playerKey: playerKey 
@@ -212,6 +212,7 @@ export default function App() {
     setPlayerHand(prev => [...prev, ...newCardsToAdd]);
     setSelectedCards([]);
 
+    // Check if all non-judges have submitted
     const snapshot = await get(ref(db, `rooms/${currentRoom}`));
     const latestRoom = snapshot.val();
     if (latestRoom) {
@@ -226,10 +227,20 @@ export default function App() {
 
   const handlePickWinner = async (winnerKey) => {
     const currentScore = roomData.players[winnerKey]?.score || 0;
+    const newScore = currentScore + 1;
     
     await update(ref(db, `rooms/${currentRoom}/players/${winnerKey}`), {
-      score: currentScore + 1
+      score: newScore
     });
+
+    // Check if player reached 7 points (Win condition)
+    if (newScore >= WINNING_SCORE) {
+      await update(ref(db, `rooms/${currentRoom}`), {
+        status: 'game-over',
+        winner: roomData.players[winnerKey].name
+      });
+      return;
+    }
 
     const randomGreen = greenCards[Math.floor(Math.random() * greenCards.length)];
     const playerKeys = Object.keys(roomData.players);
@@ -252,6 +263,7 @@ export default function App() {
     );
   }
 
+  // --- LOGIN SCREEN ---
   if (!currentRoom || !roomData) {
     return (
       <div className="min-h-screen bg-zinc-950 text-white flex flex-col items-center justify-center p-6">
@@ -308,7 +320,11 @@ export default function App() {
     );
   }
 
+  // --- LOBBY SCREEN (Host Only Start Button) ---
   if (roomData.status === 'lobby') {
+    const myPlayerEntry = Object.entries(roomData.players || {}).find(([_, p]) => p.name === playerName);
+    const isHost = myPlayerEntry ? myPlayerEntry[1].isHost : false;
+
     return (
       <div className="min-h-screen bg-zinc-950 text-white p-8 flex flex-col items-center">
         <div className="max-w-3xl w-full bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-xl mb-8 flex justify-between items-center">
@@ -327,17 +343,64 @@ export default function App() {
           <ul className="grid grid-cols-2 gap-3 mb-6">
             {Object.values(roomData.players || {}).map((p, idx) => (
               <li key={idx} className="bg-zinc-800/80 px-4 py-3 rounded-xl border border-zinc-700/50 flex items-center justify-between">
-                <span className="font-semibold text-white">{p.name}</span>
+                <span className="font-semibold text-white">{p.name} {p.isHost && '(Host)'}</span>
                 <span className="text-xs text-zinc-400">Score: {p.score || 0}</span>
               </li>
             ))}
           </ul>
 
+          {isHost ? (
+            <button 
+              onClick={handleStartGame}
+              className="w-full bg-emerald-600 hover:bg-emerald-500 font-bold py-4 rounded-xl transition-colors text-lg shadow-lg shadow-emerald-900/40"
+            >
+              Start Game
+            </button>
+          ) : (
+            <div className="text-center text-amber-300 font-bold bg-amber-950/40 border border-amber-800/60 p-4 rounded-xl">
+              Waiting for the Room Creator (Host) to start the game...
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // --- WIN SCREEN ---
+  if (roomData.status === 'game-over') {
+    return (
+      <div className="min-h-screen bg-zinc-950 text-white p-8 flex flex-col items-center justify-center text-center">
+        <div className="bg-zinc-900 border-2 border-amber-500/60 p-10 rounded-3xl shadow-2xl max-w-xl w-full">
+          <h1 className="text-5xl font-black text-amber-400 mb-4">🎉 WE HAVE A WINNER! 🎉</h1>
+          <p className="text-3xl font-extrabold text-white mb-6">{roomData.winner} reached {WINNING_SCORE} points!</p>
+          
+          <div className="mb-8 bg-zinc-950 p-4 rounded-xl border border-zinc-800">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3">Final Standings</h3>
+            <div className="flex flex-col gap-2">
+              {Object.values(roomData.players || {})
+                .sort((a, b) => (b.score || 0) - (a.score || 0))
+                .map((p, idx) => (
+                  <div key={idx} className="flex justify-between items-center px-4 py-2 bg-zinc-900 rounded-lg">
+                    <span className="font-bold">{p.name}</span>
+                    <span className="text-emerald-400 font-black">{p.score || 0} pts</span>
+                  </div>
+                ))}
+            </div>
+          </div>
+
           <button 
-            onClick={handleStartGame}
-            className="w-full bg-emerald-600 hover:bg-emerald-500 font-bold py-4 rounded-xl transition-colors text-lg shadow-lg shadow-emerald-900/40"
+            onClick={async () => {
+              await update(ref(db, `rooms/${currentRoom}`), { status: 'lobby', winner: null, submissions: null });
+              // Reset scores
+              const resetPlayers = {};
+              Object.entries(roomData.players || {}).forEach(([k, p]) => {
+                resetPlayers[k] = { ...p, score: 0 };
+              });
+              await update(ref(db, `rooms/${currentRoom}/players`), resetPlayers);
+            }}
+            className="bg-emerald-600 hover:bg-emerald-500 font-black px-8 py-4 rounded-xl text-lg shadow-lg w-full"
           >
-            Start Game
+            Play Again / Return to Lobby
           </button>
         </div>
       </div>
@@ -349,21 +412,25 @@ export default function App() {
     k => roomData.players[k]?.name === playerName
   );
   const requiredPick = roomData.currentGreen?.pick || 1;
+  const totalPlayersCount = Object.keys(roomData.players || {}).length;
+  const submissionsCount = Object.keys(roomData.submissions || {}).length;
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white p-6 flex flex-col items-center">
+      {/* Header & Scoreboard */}
       <div className="w-full max-w-4xl flex justify-between items-center mb-6 bg-zinc-900 px-6 py-4 rounded-xl border border-zinc-800">
         <span className="text-emerald-400 font-bold">Room: {currentRoom}</span>
-        <div className="flex gap-4 items-center">
+        <div className="flex gap-3 items-center flex-wrap justify-center">
           {Object.values(roomData.players || {}).map((p, idx) => (
-            <span key={idx} className="text-xs text-zinc-300 bg-zinc-800 px-3 py-1 rounded-full border border-zinc-700">
-              {p.name}: <strong className="text-emerald-400">{p.score || 0} pts</strong>
+            <span key={idx} className={`text-xs px-3 py-1 rounded-full border ${roomData.judge && roomData.players[roomData.judge]?.name === p.name ? 'bg-purple-950 border-purple-500 text-purple-200' : 'bg-zinc-800 border-zinc-700 text-zinc-300'}`}>
+              {p.name}: <strong className="text-emerald-400">{p.score || 0} pts</strong> {roomData.judge && roomData.players[roomData.judge]?.name === p.name && '👑'}
             </span>
           ))}
         </div>
         <span className="text-zinc-400 text-sm">Judge: <strong className="text-purple-400">{roomData.players[roomData.judge]?.name}</strong></span>
       </div>
 
+      {/* Prompt Card */}
       <div className="mb-8">
         {roomData.currentGreen && (
           <GreenCard 
@@ -374,17 +441,18 @@ export default function App() {
         )}
       </div>
 
+      {/* JUDGING PHASE / SUBMISSIONS REVEAL */}
       {roomData.status === 'judging' ? (
         isCurrentJudge ? (
           <div className="w-full max-w-4xl flex flex-col items-center mb-8">
             <h3 className="text-xl font-bold text-purple-300 mb-2">Select the winning combo!</h3>
-            <p className="text-zinc-400 text-sm mb-6">Click on your favorite player submission below to award a point (completely anonymous):</p>
+            <p className="text-zinc-400 text-sm mb-6">All submissions are in. Click your favorite combination below to award a point:</p>
             <div className="flex flex-wrap gap-6 justify-center">
               {Object.entries(roomData.submissions || {}).map(([playerKey, sub]) => (
                 <div 
                   key={playerKey} 
                   onClick={() => handlePickWinner(playerKey)}
-                  className="bg-zinc-900 border-2 border-zinc-700 hover:border-purple-500 p-4 rounded-xl cursor-pointer transition-all flex flex-col gap-2 max-w-xs shadow-lg"
+                  className="bg-zinc-900 border-2 border-zinc-700 hover:border-emerald-500 p-4 rounded-xl cursor-pointer transition-all flex flex-col gap-2 max-w-xs shadow-xl group hover:scale-105"
                 >
                   <div className="flex flex-col gap-2">
                     {sub.cards?.map((cardObj, i) => (
@@ -394,38 +462,65 @@ export default function App() {
                             {i + 1}
                           </span>
                         )}
-                        {/* 2. UPDATED: Passed jp={cardObj.jp} to judge view */}
                         <PurpleCard text={cardObj.text} jp={cardObj.jp} selected={false} />
                       </div>
                     ))}
                   </div>
+                  <span className="text-center text-xs font-bold text-emerald-400 mt-2 uppercase tracking-wider group-hover:underline">Pick This Winner 🏆</span>
                 </div>
               ))}
             </div>
           </div>
         ) : (
-          <div className="text-center bg-purple-950/40 border border-purple-800 p-6 rounded-2xl max-w-md w-full mb-8">
-            <h3 className="text-xl font-bold text-purple-300 mb-2">Judging Phase!</h3>
-            <p className="text-zinc-300 text-sm">The judge is reviewing the anonymous answers...</p>
+          <div className="text-center bg-purple-950/40 border border-purple-800 p-8 rounded-2xl max-w-md w-full mb-8 shadow-xl">
+            <h3 className="text-2xl font-bold text-purple-300 mb-2">Judging in Progress!</h3>
+            <p className="text-zinc-300 text-sm">All cards have been submitted anonymously. {roomData.players[roomData.judge]?.name} is reviewing them...</p>
           </div>
         )
       ) : isCurrentJudge ? (
-        <div className="text-center bg-purple-950/40 border border-purple-800 p-6 rounded-2xl max-w-md w-full mb-8">
-          <h3 className="text-xl font-bold text-purple-300 mb-2">You are the Judge!</h3>
-          <p className="text-zinc-300 text-sm mb-4">Waiting for players to submit their combo cards...</p>
-          <div className="text-xs text-purple-400 font-bold">
-            Submissions: {Object.keys(roomData.submissions || {}).length} / {Object.keys(roomData.players || {}).length - 1}
+        // --- JUDGE WAITING SCREEN WITH CARD BACKS ---
+        <div className="w-full max-w-4xl flex flex-col items-center mb-8">
+          <div className="text-center bg-purple-950/40 border border-purple-800 p-6 rounded-2xl max-w-md w-full mb-6">
+            <h3 className="text-xl font-bold text-purple-300 mb-2">You are the Judge! 👑</h3>
+            <p className="text-zinc-300 text-sm mb-3">Waiting for players to submit their cards...</p>
+            <div className="text-sm font-black text-amber-400 bg-purple-900/60 px-4 py-1.5 rounded-full inline-block">
+              Submissions: {submissionsCount} / {totalPlayersCount - 1}
+            </div>
+          </div>
+
+          <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-4">Submitted Cards (Waiting to Reveal)</h4>
+          <div className="flex flex-wrap justify-center gap-4">
+            {Array.from({ length: submissionsCount }).map((_, idx) => (
+              <CardBack key={idx} />
+            ))}
+            {submissionsCount === 0 && (
+              <p className="text-zinc-500 italic text-sm">No submissions yet...</p>
+            )}
           </div>
         </div>
       ) : hasSubmitted ? (
-        <div className="text-center bg-emerald-950/40 border border-emerald-800 p-6 rounded-2xl max-w-md w-full mb-8">
-          <h3 className="text-xl font-bold text-emerald-300 mb-2">Combo Submitted!</h3>
-          <p className="text-zinc-300 text-sm">Waiting for other players to finish selecting...</p>
+        // --- PLAYER WAITING SCREEN WITH CARD BACKS ---
+        <div className="w-full max-w-4xl flex flex-col items-center mb-8">
+          <div className="text-center bg-emerald-950/40 border border-emerald-800 p-6 rounded-2xl max-w-md w-full mb-6">
+            <h3 className="text-xl font-bold text-emerald-300 mb-2">Combo Submitted! ✅</h3>
+            <p className="text-zinc-300 text-sm">Waiting for other players and the judge...</p>
+            <div className="text-xs text-emerald-400 font-bold mt-2">
+              Submissions: {submissionsCount} / {totalPlayersCount - 1}
+            </div>
+          </div>
+
+          <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-4">Table Status</h4>
+          <div className="flex flex-wrap justify-center gap-4">
+            {Array.from({ length: submissionsCount }).map((_, idx) => (
+              <CardBack key={idx} />
+            ))}
+          </div>
         </div>
       ) : (
+        // --- PLAYER SELECTION HAND SCREEN ---
         <div className="w-full max-w-4xl flex flex-col items-center mb-8">
           <h3 className="text-lg font-bold text-zinc-300 mb-4">
-            Select {requiredPick} card{requiredPick > 1 ? 's' : ''}
+            Select {requiredPick} card{requiredPick > 1 ? 's' : ''} from your hand:
           </h3>
           <div className="flex flex-wrap gap-4 justify-center">
             {playerHand.map((card) => {
@@ -438,7 +533,6 @@ export default function App() {
                       {selectedIndex + 1}
                     </span>
                   )}
-                  {/* 3. UPDATED: Passed jp={card.jp} to player hand cards */}
                   <PurpleCard 
                     text={card.text} 
                     jp={card.jp}
