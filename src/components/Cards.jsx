@@ -15,7 +15,7 @@ export function GreenCard({ text, pick, pack }) {
         backgroundSize: '100% 100%',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        colorScheme: 'light' // Fixes PC dark mode text inversion
+        colorScheme: 'light'
       }}
     >
       {/* Top Bar Metadata */}
@@ -24,9 +24,9 @@ export function GreenCard({ text, pick, pack }) {
         <span>{pack || 'Classic'}</span>
       </div>
 
-      {/* Center Topic Text */}
+      {/* Center Topic Text - Added font-childos here */}
       <div className="relative z-10 flex items-center justify-center py-6 px-6 text-center my-auto">
-        <span className="text-base sm:text-lg font-bold text-black leading-snug tracking-tight break-words">
+        <span className="font-childos text-base sm:text-lg font-bold text-black leading-snug tracking-tight break-words">
           {text}
         </span>
       </div>
@@ -88,7 +88,7 @@ export function PurpleCard({ text, jp, selected, onClick }) {
         justifyContent: 'center',
         alignItems: 'center',
         position: 'relative',
-        colorScheme: 'light' // Fixes PC dark mode text inversion
+        colorScheme: 'light'
       }}
       className={`cursor-pointer transition-all duration-200 select-none rounded-2xl shadow-lg shrink-0 p-5 ${
         selected 
@@ -120,9 +120,9 @@ export function PurpleCard({ text, jp, selected, onClick }) {
         )}
       </div>
       
-      {/* Center Text Area */}
+      {/* Center Text Area - Added font-childos here */}
       <div className="text-center px-4 z-10 w-full py-2">
-        <span className="purple-card-text text-sm font-bold tracking-tight leading-snug break-words block">
+        <span className="font-childos purple-card-text text-sm font-bold tracking-tight leading-snug break-words block">
           {text}
         </span>
         

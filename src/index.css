@@ -2,6 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Childos Arabic';
+  src: url('/fonts/ChildosArabic.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Force Childos Arabic globally across all card elements and keep the 2px white border */
+.card,
+.card p,
+.card span,
+div[class*="card"],
+div[class*="card"] span,
+.font-childos {
+  font-family: 'Childos Arabic', system-ui, -apple-system, sans-serif !important;
+  -webkit-text-stroke: 2px #ffffff;
+  paint-order: stroke fill;
+}
+
 /* Tooltip styles for Purple Cards */
 .card[data-jp]:not([data-jp=""]):hover::after,
 .card[data-jp]:not([data-jp=""]):focus::after {
@@ -20,6 +40,7 @@
   pointer-events: none;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   z-index: 20;
+  -webkit-text-stroke: 0px transparent;
 }
 
 .card[data-jp]:not([data-jp=""]):hover::before,
@@ -34,20 +55,4 @@
   border-color: #1f2937 transparent transparent transparent;
   pointer-events: none;
   z-index: 20;
-}
-
-@font-face {
-  font-family: 'Childos Arabic';
-  src: local('Childos Arabic'),
-       local('ChildosArabic'),
-       url('/src/assets/fonts/ChildosArabic.otf') format('opentype');
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* Enforce standard digits & fallback glyph mapping */
-.font-childos {
-  font-family: 'Childos Arabic', system-ui, -apple-system, sans-serif !important;
-  font-variant-numeric: lining-nums tabular-nums;
 }
