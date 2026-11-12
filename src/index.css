@@ -10,44 +10,57 @@
   font-display: swap;
 }
 
-/* Only apply Childos Arabic to elements explicitly tagged with .font-childos */
+/* Force full-screen charcoal background on root */
+html, body, #root {
+  min-height: 100vh;
+  background-color: #0d0d12;
+  color: #ffffff;
+  margin: 0;
+  padding: 0;
+}
+
 .font-childos {
   font-family: 'Childos Arabic', system-ui, -apple-system, sans-serif !important;
   -webkit-text-stroke: 1.5px #ffffff;
   paint-order: stroke fill;
 }
 
-/* Tooltip styles for Purple Cards */
-.card[data-jp]:not([data-jp=""]):hover::after,
-.card[data-jp]:not([data-jp=""]):focus::after {
-  content: attr(data-jp);
-  position: absolute;
-  bottom: 108%;
-  left: 50%;
-  transform: translateX(-50%) translateY(4px);
-  background-color: #1f2937;
-  color: #ffffff;
-  font-size: 0.85rem;
-  font-weight: 600;
-  padding: 6px 10px;
-  border-radius: 6px;
-  white-space: nowrap;
-  pointer-events: none;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  z-index: 20;
-  -webkit-text-stroke: 0px transparent;
+/* Bold Comic Charcoal Background with Radial Speed Lines & Halftone Dots */
+.comic-bg {
+  background-color: #0d0d12;
+  background-image: 
+    repeating-conic-gradient(
+      from 0deg at 50% 35%,
+      rgba(255, 255, 255, 0.04) 0deg 3deg,
+      transparent 3deg 12deg
+    ),
+    radial-gradient(rgba(255, 255, 255, 0.09) 1.5px, transparent 1.5px);
+  background-size: 100% 100%, 22px 22px;
+  background-attachment: fixed;
 }
 
-.card[data-jp]:not([data-jp=""]):hover::before,
-.card[data-jp]:not([data-jp=""]):focus::before {
-  content: '';
-  position: absolute;
-  bottom: 96%;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 5px;
-  border-style: solid;
-  border-color: #1f2937 transparent transparent transparent;
-  pointer-events: none;
-  z-index: 20;
+/* Pulsing Ambient Glow Animations */
+@keyframes emeraldGlow {
+  0%, 100% { box-shadow: 0 0 30px 2px rgba(16, 185, 129, 0.3); }
+  50% { box-shadow: 0 0 55px 6px rgba(16, 185, 129, 0.6); }
+}
+
+@keyframes purpleGlow {
+  0%, 100% { box-shadow: 0 0 30px 2px rgba(168, 85, 247, 0.35); }
+  50% { box-shadow: 0 0 60px 6px rgba(168, 85, 247, 0.65); }
+}
+
+.comic-glow-emerald {
+  animation: emeraldGlow 3s infinite ease-in-out;
+}
+
+.comic-glow-purple {
+  animation: purpleGlow 3s infinite ease-in-out;
+}
+
+/* High-Contrast Comic Panel Box */
+.comic-panel {
+  background-color: #18181f;
+  border: 4px solid #000000;
+  box-shadow: 6px 6px 0px 0px #000000;
 }

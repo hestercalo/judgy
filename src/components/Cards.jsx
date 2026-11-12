@@ -42,11 +42,18 @@ export function GreenCard({ text }) {
         colorScheme: 'light'
       }}
     >
+      <style>{`
+        .green-card-text {
+          color: #000000 !important;
+          -webkit-text-fill-color: #000000 !important;
+        }
+      `}</style>
+
       {/* Center Topic Text Only */}
       <div className="relative z-10 flex items-center justify-center py-4 px-6 text-center w-full">
         <span 
-          className="font-childos font-bold text-black leading-tight tracking-tight break-words whitespace-normal w-full block"
-          style={{ fontSize: '2.5rem' }}
+          className="font-childos green-card-text font-black leading-tight tracking-tight break-words whitespace-normal w-full block"
+          style={{ fontSize: '2.5rem', color: '#000000' }}
         >
           {renderFormattedText(text)}
         </span>
@@ -72,13 +79,13 @@ export function CardBack({ onClick, isSelected }) {
         colorScheme: 'light'
       }}
       className={`cursor-pointer transition-all duration-200 select-none rounded-2xl shadow-lg shrink-0 ${
-        isSelected ? 'ring-4 ring-emerald-500 scale-105 shadow-2xl' : 'hover:scale-105'
+        isSelected ? 'ring-4 ring-emerald-400 scale-105 shadow-2xl' : 'hover:scale-105'
       }`}
     />
   );
 }
 
-export function PurpleCard({ text, jp, selected, onClick }) {
+export function PurpleCard({ text, jp, selected, selectionIndex, onClick }) {
   const [showJp, setShowJp] = useState(false);
   const bgPath = `${import.meta.env.BASE_URL}purple-card-bg.png`;
 
@@ -105,10 +112,10 @@ export function PurpleCard({ text, jp, selected, onClick }) {
         position: 'relative',
         colorScheme: 'light'
       }}
-      className={`card cursor-pointer transition-all duration-200 select-none rounded-2xl shadow-lg shrink-0 p-6 ${
+      className={`card cursor-pointer transition-all duration-200 select-none rounded-2xl shrink-0 p-6 ${
         selected 
-          ? 'ring-4 ring-emerald-500 scale-105 shadow-2xl' 
-          : 'hover:scale-105'
+          ? 'ring-4 ring-emerald-400 scale-105 shadow-[0_0_30px_rgba(16,185,129,0.6)]' 
+          : 'hover:scale-105 shadow-lg'
       }`}
     >
       <style>{`
@@ -118,7 +125,18 @@ export function PurpleCard({ text, jp, selected, onClick }) {
         }
       `}</style>
 
-      {/* Top Bar: Scaled-up JP/EN Toggle Badge (~1.5x) */}
+      {/* Selection Order Badge (if selected in multi-pick) */}
+      {selected && selectionIndex !== undefined && (
+        <div 
+          style={{ position: 'absolute', top: '10px', left: '10px' }}
+          className="z-20 bg-emerald-400 text-black font-black w-8 h-8 rounded-full border-3 border-black flex items-center justify-center text-base shadow-lg animate-bounce"
+          style={{ fontFamily: "'Childos Arabic', system-ui, sans-serif" }}
+        >
+          {selectionIndex + 1}
+        </div>
+      )}
+
+      {/* Top Bar: Scaled-up JP/EN Toggle Badge */}
       <div style={{ position: 'absolute', top: '10px', right: '10px' }} className="z-20 font-sans">
         {jp && (
           <button
