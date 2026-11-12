@@ -29,7 +29,7 @@ export function GreenCard({ text }) {
 
   return (
     <div 
-      className="card relative flex flex-col justify-center items-center select-none shrink-0 rounded-3xl shadow-xl overflow-hidden p-6"
+      className="card relative flex flex-col justify-center items-center select-none shrink-0 rounded-3xl shadow-xl overflow-hidden p-6 box-border"
       style={{ 
         width: '440px', 
         minWidth: '440px',
@@ -78,14 +78,16 @@ export function CardBack({ onClick, isSelected }) {
         height: '208px',
         colorScheme: 'light'
       }}
-      className={`cursor-pointer transition-all duration-200 select-none rounded-2xl shadow-lg shrink-0 ${
-        isSelected ? 'ring-4 ring-emerald-400 scale-105 shadow-2xl' : 'hover:scale-105'
+      className={`cursor-pointer transition-transform duration-200 select-none rounded-2xl shrink-0 ${
+        isSelected 
+          ? 'scale-105 filter drop-shadow-[0_0_20px_rgba(255,255,255,0.9)] drop-shadow-[0_0_8px_rgba(255,255,255,1)]' 
+          : 'hover:scale-105 shadow-lg'
       }`}
     />
   );
 }
 
-export function PurpleCard({ text, jp, selected, selectionIndex, onClick }) {
+export function PurpleCard({ text, jp, selected, onClick, noHover = false }) {
   const [showJp, setShowJp] = useState(false);
   const bgPath = `${import.meta.env.BASE_URL}purple-card-bg.png`;
 
@@ -112,10 +114,12 @@ export function PurpleCard({ text, jp, selected, selectionIndex, onClick }) {
         position: 'relative',
         colorScheme: 'light'
       }}
-      className={`card cursor-pointer transition-all duration-200 select-none rounded-2xl shrink-0 p-6 ${
+      className={`card cursor-pointer transition-transform duration-200 select-none shrink-0 p-6 box-border outline-none focus:outline-none focus:ring-0 shadow-lg ${
         selected 
-          ? 'ring-4 ring-emerald-400 scale-105 shadow-[0_0_30px_rgba(16,185,129,0.6)]' 
-          : 'hover:scale-105 shadow-lg'
+          ? `filter drop-shadow-[0_0_22px_rgba(255,255,255,0.9)] drop-shadow-[0_0_8px_rgba(255,255,255,1)] z-20${noHover ? '' : ' scale-105'}` 
+          : noHover 
+            ? '' 
+            : 'hover:scale-105'
       }`}
     >
       <style>{`
@@ -125,19 +129,8 @@ export function PurpleCard({ text, jp, selected, selectionIndex, onClick }) {
         }
       `}</style>
 
-      {/* Selection Order Badge (if selected in multi-pick) */}
-      {selected && selectionIndex !== undefined && (
-        <div 
-          style={{ position: 'absolute', top: '10px', left: '10px' }}
-          className="z-20 bg-emerald-400 text-black font-black w-8 h-8 rounded-full border-3 border-black flex items-center justify-center text-base shadow-lg animate-bounce"
-          style={{ fontFamily: "'Childos Arabic', system-ui, sans-serif" }}
-        >
-          {selectionIndex + 1}
-        </div>
-      )}
-
-      {/* Top Bar: Scaled-up JP/EN Toggle Badge */}
-      <div style={{ position: 'absolute', top: '10px', right: '10px' }} className="z-20 font-sans">
+      {/* Top Bar: JP/EN Toggle Badge */}
+      <div style={{ position: 'absolute', top: '10px', right: '10px' }} className="z-30 font-sans">
         {jp && (
           <button
             type="button"

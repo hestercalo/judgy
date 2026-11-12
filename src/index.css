@@ -8,15 +8,18 @@
   font-weight: 900;
   font-style: normal;
   font-display: swap;
+  /* ONLY apply Childos to A-Z, a-z, and spaces; fallback for numbers & punctuation */
+  unicode-range: U+0020, U+0041-005A, U+0061-007A;
 }
 
-/* Force full-screen charcoal background on root */
+/* Global font stack: Childos for letters, system-ui for numbers/punctuation */
 html, body, #root {
   min-height: 100vh;
   background-color: #0d0d12;
   color: #ffffff;
   margin: 0;
   padding: 0;
+  font-family: 'Childos Arabic', system-ui, -apple-system, sans-serif;
 }
 
 .font-childos {
@@ -41,8 +44,8 @@ html, body, #root {
 
 /* Pulsing Ambient Glow Animations */
 @keyframes emeraldGlow {
-  0%, 100% { box-shadow: 0 0 30px 2px rgba(16, 185, 129, 0.3); }
-  50% { box-shadow: 0 0 55px 6px rgba(16, 185, 129, 0.6); }
+  0%, 100% { box-shadow: 0 0 30px 2px rgba(191, 244, 169, 0.35); }
+  50% { box-shadow: 0 0 55px 6px rgba(191, 244, 169, 0.65); }
 }
 
 @keyframes purpleGlow {

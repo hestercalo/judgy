@@ -265,7 +265,6 @@ export default function App() {
   if (!currentRoom || !roomData) {
     return (
       <div className="min-h-screen comic-bg text-white flex items-center justify-center p-4">
-        {/* Constrained width wrapper so form elements never stretch full screen */}
         <div className="w-full max-w-md flex flex-col items-center">
           <div className="comic-panel p-8 rounded-3xl w-full flex flex-col gap-6 comic-glow-emerald">
             <div className="text-center">
@@ -355,7 +354,7 @@ export default function App() {
               onClick={handleStartGame}
               className="w-full bg-emerald-400 hover:bg-emerald-300 text-black font-black py-5 px-8 rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-2xl transition-all active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer"
             >
-              START GAME 🚀
+              START GAME 
             </button>
           ) : (
             <div className="text-center text-amber-300 font-bold bg-amber-950/80 border-4 border-amber-600 p-4 rounded-2xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
@@ -400,7 +399,7 @@ export default function App() {
             }}
             className="bg-amber-400 hover:bg-amber-300 text-black font-black px-8 py-4 rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-xl w-full transition-all active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer"
           >
-            PLAY AGAIN 🔄
+            PLAY AGAIN
           </button>
         </div>
       </div>
@@ -445,24 +444,19 @@ export default function App() {
       {roomData.status === 'judging' ? (
         isCurrentJudge ? (
           <div className="w-full max-w-4xl flex flex-col items-center mb-8">
-            <h3 className="text-2xl font-black text-purple-300 mb-2 drop-shadow tracking-wide">SELECT THE WINNING COMBO!</h3>
-            <p className="text-zinc-300 text-sm font-bold mb-6">All submissions are in. Click any card combination below to award the point:</p>
+            <h3 className="text-2xl font-black text-purple-300 mb-2 drop-shadow tracking-wide">SELECT THE WINNER!</h3>
+            <p className="text-zinc-300 text-sm font-bold mb-6">All submissions are in. Click any card below to award the point:</p>
             <div className="flex flex-wrap gap-8 justify-center">
               {Object.entries(roomData.submissions || {}).map(([playerKey, sub]) => (
                 <div 
                   key={playerKey} 
                   onClick={() => handlePickWinner(playerKey)}
-                  className="comic-panel p-4 rounded-2xl cursor-pointer transition-all flex flex-col gap-2 max-w-xs hover:border-emerald-400 hover:scale-105 active:scale-95 group"
+                  className="cursor-pointer flex flex-col gap-2 max-w-xs group"
                 >
                   <div className="flex flex-col gap-2">
                     {sub.cards?.map((cardObj, i) => (
-                      <div key={i} className="relative">
-                        {sub.cards.length > 1 && (
-                          <span className="absolute -top-2 -left-2 bg-purple-600 text-white font-black w-6 h-6 rounded-full border-2 border-black flex items-center justify-center text-xs shadow z-10">
-                            {i + 1}
-                          </span>
-                        )}
-                        <PurpleCard text={cardObj.text} jp={cardObj.jp} selected={false} />
+                      <div key={i} className="transition-transform duration-200 hover:filter hover:drop-shadow-[0_0_22px_rgba(255,255,255,0.9)] hover:drop-shadow-[0_0_8px_rgba(255,255,255,1)]">
+                        <PurpleCard text={cardObj.text} jp={cardObj.jp} selected={false} noHover={true} />
                       </div>
                     ))}
                   </div>
@@ -554,25 +548,24 @@ export default function App() {
   );
 }
 
-// --- COMIC-STYLED SUBMIT BUTTON COMPONENT ---
+// --- COMIC-STYLED IMAGE SUBMIT BUTTON COMPONENT ---
 function SubmitButton({ onClick, disabled, label = "SUBMIT CARD!" }) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`px-12 py-5 text-2xl sm:text-3xl font-black rounded-2xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all duration-150 select-none ${
+      className={`group relative border-none bg-transparent p-0 transition-transform duration-150 select-none ${
         disabled
-          ? 'bg-zinc-700 text-zinc-400 opacity-50 cursor-not-allowed shadow-none'
-          : 'bg-emerald-400 hover:bg-emerald-300 active:translate-x-1.5 active:translate-y-1.5 active:shadow-none text-black cursor-pointer animate-pulse'
+          ? 'opacity-50 cursor-not-allowed grayscale'
+          : 'hover:scale-105 active:scale-95 cursor-pointer animate-bounce'
       }`}
-      style={{
-        fontFamily: "'Childos Arabic', system-ui, sans-serif",
-        WebkitTextStroke: '1px #ffffff',
-        paintOrder: 'stroke fill',
-      }}
     >
-      {label}
+      <img 
+        src="/submit-card-button.png" 
+        alt={label} 
+        className="w-48 sm:w-60 h-auto drop-shadow-[6px_6px_0px_rgba(0,0,0,1)] transition-all"
+      />
     </button>
   );
 }
