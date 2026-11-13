@@ -92,8 +92,8 @@ export default function App() {
 
   const initPlayerDeckAndHand = (allPurpleCards) => {
     const shuffled = shuffleArray(allPurpleCards);
-    const initialHand = shuffled.slice(0, 7);
-    const remainingDeck = shuffled.slice(7);
+    const initialHand = shuffled.slice(0, 9);
+    const remainingDeck = shuffled.slice(9);
 
     setPlayerHand(initialHand);
     setMyDeck(remainingDeck);
