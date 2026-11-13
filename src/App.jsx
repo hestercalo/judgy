@@ -255,17 +255,26 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen comic-bg text-emerald-400 flex items-center justify-center text-2xl font-black tracking-widest">
-        LOADING JUDGY...
+      <div className="min-h-screen comic-bg flex items-center justify-center p-6">
+        <div className="comic-panel p-4 rounded-3xl max-w-lg w-full flex flex-col items-center comic-glow-emerald overflow-hidden shadow-2xl">
+          <img 
+            src={`${import.meta.env.BASE_URL}loading-screen.gif`} 
+            alt="Loading Judgy..." 
+            className="w-full h-auto rounded-2xl object-cover border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+          />
+          <p className="text-emerald-400 font-black tracking-widest mt-4 text-xl animate-pulse">
+            LOADING GAME...
+          </p>
+        </div>
       </div>
     );
   }
 
-  // --- LOGIN SCREEN ---
+  // --- START / LOGIN SCREEN (STRICTLY CENTERED & CONSTRAINED) ---
   if (!currentRoom || !roomData) {
     return (
-      <div className="min-h-screen comic-bg text-white flex items-center justify-center p-4">
-        <div className="w-full max-w-md flex flex-col items-center">
+      <div className="min-h-screen w-full comic-bg text-white flex items-center justify-center p-4">
+        <div className="w-full max-w-md mx-auto">
           <div className="comic-panel p-8 rounded-3xl w-full flex flex-col gap-6 comic-glow-emerald">
             <div className="text-center">
               <h1 className="text-6xl font-black tracking-tight text-emerald-400 mb-2 drop-shadow-[2px_2px_0px_#000]">JUDGY</h1>
@@ -284,12 +293,10 @@ export default function App() {
                 />
               </div>
 
-              <button 
-                onClick={handleCreateRoom}
-                className="w-full bg-emerald-400 hover:bg-emerald-300 text-black font-black py-4 px-6 rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-xl transition-all active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer"
-              >
-                CREATE NEW ROOM
-              </button>
+              {/* Host Lobby Button */}
+              <div className="flex justify-center w-full">
+                <HostLobbyButton onClick={handleCreateRoom} />
+              </div>
 
               <div className="relative flex py-1 items-center w-full">
                 <div className="flex-grow border-t-4 border-zinc-800"></div>
@@ -297,21 +304,18 @@ export default function App() {
                 <div className="flex-grow border-t-4 border-zinc-800"></div>
               </div>
 
-              <div className="flex gap-3 w-full">
+              <div className="flex gap-3 w-full items-center">
                 <input 
                   type="text" 
                   placeholder="CODE" 
                   maxLength={4}
                   value={roomCode}
                   onChange={(e) => setRoomCode(e.target.value)}
-                  className="w-1/3 bg-zinc-950 border-4 border-black rounded-xl px-4 py-3.5 text-white uppercase text-center tracking-widest font-black text-lg focus:outline-none focus:border-purple-400"
+                  className="w-1/3 bg-zinc-950 border-4 border-black rounded-xl px-2 py-3.5 text-white uppercase text-center tracking-widest font-black text-lg focus:outline-none focus:border-purple-400"
                 />
-                <button 
-                  onClick={handleJoinRoom}
-                  className="w-2/3 bg-purple-600 hover:bg-purple-500 text-white font-black py-3.5 px-6 rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-xl transition-all active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer"
-                >
-                  JOIN ROOM
-                </button>
+                <div className="w-2/3 flex justify-center">
+                  <JoinRoomButton onClick={handleJoinRoom} />
+                </div>
               </div>
             </div>
           </div>
@@ -338,9 +342,9 @@ export default function App() {
           </div>
         </div>
 
-        <div className="max-w-xl w-full comic-panel p-6 rounded-3xl mb-6">
-          <h3 className="text-sm font-black text-zinc-300 uppercase tracking-wider mb-4">Players in Lobby:</h3>
-          <ul className="flex flex-col gap-2.5 mb-6">
+        <div className="max-w-xl w-full comic-panel p-6 rounded-3xl mb-6 flex flex-col items-center">
+          <h3 className="text-sm font-black text-zinc-300 uppercase tracking-wider mb-4 w-full text-left">Players in Lobby:</h3>
+          <ul className="flex flex-col gap-2.5 mb-6 w-full">
             {Object.values(roomData.players || {}).map((p, idx) => (
               <li key={idx} className="bg-zinc-900 px-4 py-3.5 rounded-2xl border-4 border-black flex items-center justify-between shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                 <span className="font-bold text-white text-base">{p.name} {p.isHost && '👑'}</span>
@@ -350,14 +354,16 @@ export default function App() {
           </ul>
 
           {isHost ? (
-            <button 
-              onClick={handleStartGame}
-              className="w-full bg-emerald-400 hover:bg-emerald-300 text-black font-black py-5 px-8 rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-2xl transition-all active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer"
-            >
-              START GAME 
-            </button>
+            <div className="flex justify-center w-full">
+              <button 
+                onClick={handleStartGame}
+                className="bg-emerald-400 hover:bg-emerald-300 text-black font-black py-3.5 px-10 rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-xl transition-all active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer"
+              >
+                START GAME 🚀
+              </button>
+            </div>
           ) : (
-            <div className="text-center text-amber-300 font-bold bg-amber-950/80 border-4 border-amber-600 p-4 rounded-2xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+            <div className="text-center text-amber-300 font-bold bg-amber-950/80 border-4 border-amber-600 p-4 rounded-2xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] w-full">
               Waiting for the Host to start the game...
             </div>
           )}
@@ -370,12 +376,12 @@ export default function App() {
   if (roomData.status === 'game-over') {
     return (
       <div className="min-h-screen comic-bg text-white p-8 flex flex-col items-center justify-center text-center">
-        <div className="comic-panel p-10 rounded-3xl max-w-xl w-full comic-glow-gold">
+        <div className="comic-panel p-10 rounded-3xl max-w-xl w-full comic-glow-gold flex flex-col items-center">
           <h1 className="text-4xl sm:text-5xl font-black text-amber-400 mb-4 drop-shadow-[2px_2px_0px_#000]">🏆 WE HAVE A WINNER! 🏆</h1>
           <p className="text-2xl sm:text-3xl font-black text-white mb-6">{roomData.winner} reached {WINNING_SCORE} points!</p>
           
-          <div className="mb-8 bg-zinc-950 p-4 rounded-2xl border-4 border-black">
-            <h3 className="text-xs font-black uppercase tracking-wider text-zinc-400 mb-3">Final Standings</h3>
+          <div className="mb-8 bg-zinc-950 p-4 rounded-2xl border-4 border-black w-full">
+            <h3 className="text-xs font-black uppercase tracking-wider text-zinc-400 mb-3 text-left">Final Standings</h3>
             <div className="flex flex-col gap-2">
               {Object.values(roomData.players || {})
                 .sort((a, b) => (b.score || 0) - (a.score || 0))
@@ -397,7 +403,7 @@ export default function App() {
               });
               await update(ref(db, `rooms/${currentRoom}/players`), resetPlayers);
             }}
-            className="bg-amber-400 hover:bg-amber-300 text-black font-black px-8 py-4 rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-xl w-full transition-all active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer"
+            className="bg-amber-400 hover:bg-amber-300 text-black font-black py-3 px-8 rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-lg transition-all active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer"
           >
             PLAY AGAIN
           </button>
@@ -548,6 +554,39 @@ export default function App() {
   );
 }
 
+// --- CUSTOM IMAGE BUTTON COMPONENTS ---
+function HostLobbyButton({ onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group relative border-none bg-transparent p-0 transition-transform duration-150 select-none hover:scale-105 active:scale-95 cursor-pointer inline-flex items-center justify-center"
+    >
+      <img 
+        src={`${import.meta.env.BASE_URL}host-lobby-button.png`} 
+        alt="Host Lobby" 
+        className="w-56 sm:w-64 h-auto drop-shadow-[5px_5px_0px_rgba(0,0,0,1)] transition-all"
+      />
+    </button>
+  );
+}
+
+function JoinRoomButton({ onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group relative border-none bg-transparent p-0 transition-transform duration-150 select-none hover:scale-105 active:scale-95 cursor-pointer inline-flex items-center justify-center"
+    >
+      <img 
+        src={`${import.meta.env.BASE_URL}join-room-button.png`} 
+        alt="Join Room" 
+        className="w-44 sm:w-48 h-auto drop-shadow-[5px_5px_0px_rgba(0,0,0,1)] transition-all"
+      />
+    </button>
+  );
+}
+
 // --- COMIC-STYLED IMAGE SUBMIT BUTTON COMPONENT ---
 function SubmitButton({ onClick, disabled, label = "SUBMIT CARD!" }) {
   return (
@@ -555,14 +594,14 @@ function SubmitButton({ onClick, disabled, label = "SUBMIT CARD!" }) {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`group relative border-none bg-transparent p-0 transition-transform duration-150 select-none ${
+      className={`group relative border-none bg-transparent p-0 transition-transform duration-150 select-none inline-flex items-center justify-center ${
         disabled
           ? 'opacity-50 cursor-not-allowed grayscale'
           : 'hover:scale-105 active:scale-95 cursor-pointer animate-bounce'
       }`}
     >
       <img 
-        src="/submit-card-button.png" 
+        src={`${import.meta.env.BASE_URL}submit-card-button.png`} 
         alt={label} 
         className="w-48 sm:w-60 h-auto drop-shadow-[6px_6px_0px_rgba(0,0,0,1)] transition-all"
       />

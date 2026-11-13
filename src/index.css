@@ -8,12 +8,11 @@
   font-weight: 900;
   font-style: normal;
   font-display: swap;
-  /* ONLY apply Childos to A-Z, a-z, and spaces; fallback for numbers & punctuation */
   unicode-range: U+0020, U+0041-005A, U+0061-007A;
 }
 
-/* Global font stack: Childos for letters, system-ui for numbers/punctuation */
 html, body, #root {
+  width: 100%;
   min-height: 100vh;
   background-color: #0d0d12;
   color: #ffffff;
