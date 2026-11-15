@@ -256,13 +256,16 @@ export default function App() {
   if (loading) {
     return (
       <div className="min-h-screen comic-bg flex items-center justify-center p-6">
-        <div className="comic-panel p-4 rounded-3xl max-w-lg w-full flex flex-col items-center comic-glow-emerald overflow-hidden shadow-2xl">
+        <div 
+          className="comic-panel p-6 rounded-3xl flex flex-col items-center shadow-2xl box-border"
+          style={{ width: '560px', maxWidth: '100%' }}
+        >
           <img 
             src={`${import.meta.env.BASE_URL}loading-screen.gif`} 
             alt="Loading Judgy..." 
             className="w-full h-auto rounded-2xl object-cover border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
           />
-          <p className="text-emerald-400 font-black tracking-widest mt-4 text-xl animate-pulse">
+          <p className="text-emerald-400 font-black tracking-widest mt-4 text-lg animate-pulse">
             LOADING GAME...
           </p>
         </div>
@@ -270,52 +273,58 @@ export default function App() {
     );
   }
 
-  // --- START / LOGIN SCREEN (STRICTLY CENTERED & CONSTRAINED) ---
+  // --- START / LOGIN SCREEN ---
   if (!currentRoom || !roomData) {
     return (
       <div className="min-h-screen w-full comic-bg text-white flex items-center justify-center p-4">
-        <div className="w-full max-w-md mx-auto">
-          <div className="comic-panel p-8 rounded-3xl w-full flex flex-col gap-6 comic-glow-emerald">
-            <div className="text-center">
-              <h1 className="text-6xl font-black tracking-tight text-emerald-400 mb-2 drop-shadow-[2px_2px_0px_#000]">JUDGY</h1>
-              <p className="text-zinc-300 font-bold text-sm">The party game of questionable choices.</p>
+        <div 
+          className="comic-panel p-8 sm:p-10 rounded-3xl flex flex-col gap-5 shadow-2xl box-border overflow-hidden"
+          style={{ width: '560px', maxWidth: '100%' }}
+        >
+          <div className="text-center">
+            <h1 className="text-5xl sm:text-6xl font-black tracking-tight text-emerald-400 mb-1 drop-shadow-[2px_2px_0px_#000]">JUDGY</h1>
+            <p className="text-zinc-300 font-bold text-xs sm:text-sm">The party game of questionable choices.</p>
+          </div>
+
+          <div className="flex flex-col items-center gap-4 w-full min-w-0">
+            {/* Centered Name Input */}
+            <div className="w-2/3 min-w-[240px] flex flex-col items-center">
+              <label className="block text-xs font-black uppercase tracking-wider text-emerald-400 mb-1 w-full text-left">Your Name</label>
+              <input 
+                type="text" 
+                placeholder="e.g. Principal Smith" 
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+                className="w-full max-w-full box-border bg-zinc-900 border-4 border-black rounded-xl px-3.5 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 font-bold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+              />
             </div>
 
-            <div className="flex flex-col gap-5 w-full">
-              <div className="w-full">
-                <label className="block text-xs font-black uppercase tracking-wider text-emerald-400 mb-1.5">Your Name</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. Principal Smith" 
-                  value={playerName}
-                  onChange={(e) => setPlayerName(e.target.value)}
-                  className="w-full bg-zinc-950 border-4 border-black rounded-xl px-4 py-3.5 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400 font-bold text-lg"
-                />
-              </div>
+            {/* Host Lobby Button */}
+            <div className="flex justify-center w-full pt-1">
+              <HostLobbyButton onClick={handleCreateRoom} />
+            </div>
 
-              {/* Host Lobby Button */}
-              <div className="flex justify-center w-full">
-                <HostLobbyButton onClick={handleCreateRoom} />
-              </div>
+            <div className="relative flex py-1 items-center w-full">
+              <div className="flex-grow border-t-4 border-zinc-800"></div>
+              <span className="flex-shrink mx-3 text-zinc-400 text-xs uppercase font-black tracking-wider">Or Join</span>
+              <div className="flex-grow border-t-4 border-zinc-800"></div>
+            </div>
 
-              <div className="relative flex py-1 items-center w-full">
-                <div className="flex-grow border-t-4 border-zinc-800"></div>
-                <span className="flex-shrink mx-4 text-zinc-400 text-xs uppercase font-black tracking-wider">Or Join</span>
-                <div className="flex-grow border-t-4 border-zinc-800"></div>
-              </div>
-
-              <div className="flex gap-3 w-full items-center">
+            {/* Room Code & Join Button */}
+            <div className="flex gap-4 w-full items-end justify-between min-w-0">
+              <div className="flex flex-col w-36 sm:w-40 shrink-0">
+                <label className="block text-xs font-black uppercase tracking-wider text-purple-400 mb-1 w-full text-left">Room Code</label>
                 <input 
                   type="text" 
                   placeholder="CODE" 
                   maxLength={4}
                   value={roomCode}
                   onChange={(e) => setRoomCode(e.target.value)}
-                  className="w-1/3 bg-zinc-950 border-4 border-black rounded-xl px-2 py-3.5 text-white uppercase text-center tracking-widest font-black text-lg focus:outline-none focus:border-purple-400"
+                  className="w-full box-border bg-zinc-900 border-4 border-black rounded-xl px-3 py-2.5 text-white uppercase text-center tracking-widest font-black text-sm focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/30 shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all"
                 />
-                <div className="w-2/3 flex justify-center">
-                  <JoinRoomButton onClick={handleJoinRoom} />
-                </div>
+              </div>
+              <div className="flex justify-end shrink-0">
+                <JoinRoomButton onClick={handleJoinRoom} />
               </div>
             </div>
           </div>
@@ -330,40 +339,41 @@ export default function App() {
     const isHost = myPlayerEntry ? myPlayerEntry[1].isHost : false;
 
     return (
-      <div className="min-h-screen comic-bg text-white p-8 flex flex-col items-center justify-center">
-        <div className="max-w-xl w-full comic-panel p-6 rounded-3xl mb-6 flex justify-between items-center comic-glow-emerald">
+      <div className="min-h-screen comic-bg text-white p-6 flex flex-col items-center justify-center">
+        <div 
+          className="comic-panel p-5 rounded-3xl mb-5 flex justify-between items-center box-border mx-auto"
+          style={{ width: '560px', maxWidth: '100%' }}
+        >
           <div>
             <span className="text-xs text-emerald-400 uppercase tracking-widest font-black">Room Code</span>
-            <h2 className="text-5xl font-black tracking-widest text-white">{currentRoom}</h2>
+            <h2 className="text-4xl font-black tracking-widest text-white">{currentRoom}</h2>
           </div>
           <div className="text-right">
             <span className="text-xs text-zinc-400 uppercase tracking-widest font-black">Players Connected</span>
-            <p className="text-3xl font-black text-emerald-300">{Object.keys(roomData.players || {}).length}</p>
+            <p className="text-2xl font-black text-emerald-300">{Object.keys(roomData.players || {}).length}</p>
           </div>
         </div>
 
-        <div className="max-w-xl w-full comic-panel p-6 rounded-3xl mb-6 flex flex-col items-center">
-          <h3 className="text-sm font-black text-zinc-300 uppercase tracking-wider mb-4 w-full text-left">Players in Lobby:</h3>
-          <ul className="flex flex-col gap-2.5 mb-6 w-full">
+        <div 
+          className="comic-panel p-6 rounded-3xl mb-5 flex flex-col items-center box-border mx-auto overflow-hidden"
+          style={{ width: '560px', maxWidth: '100%' }}
+        >
+          <h3 className="text-xs font-black text-zinc-300 uppercase tracking-wider mb-3 w-full text-left">Players in Lobby:</h3>
+          <ul className="flex flex-col gap-2.5 mb-5 w-full items-center box-border">
             {Object.values(roomData.players || {}).map((p, idx) => (
-              <li key={idx} className="bg-zinc-900 px-4 py-3.5 rounded-2xl border-4 border-black flex items-center justify-between shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-                <span className="font-bold text-white text-base">{p.name} {p.isHost && '👑'}</span>
-                <span className="text-xs font-black text-emerald-400">Score: {p.score || 0}</span>
+              <li key={idx} className="bg-zinc-900 px-4 py-3 rounded-2xl border-4 border-black flex items-center justify-between shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] w-full max-w-full box-border">
+                <span className="font-bold text-white text-sm truncate pr-2">{p.name} {p.isHost && '👑'}</span>
+                <span className="text-xs font-black text-emerald-400 shrink-0">Score: {p.score || 0}</span>
               </li>
             ))}
           </ul>
 
           {isHost ? (
-            <div className="flex justify-center w-full">
-              <button 
-                onClick={handleStartGame}
-                className="bg-emerald-400 hover:bg-emerald-300 text-black font-black py-3.5 px-10 rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-xl transition-all active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer"
-              >
-                START GAME 🚀
-              </button>
+            <div className="flex justify-center w-full pt-2">
+              <StartGameButton onClick={handleStartGame} />
             </div>
           ) : (
-            <div className="text-center text-amber-300 font-bold bg-amber-950/80 border-4 border-amber-600 p-4 rounded-2xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] w-full">
+            <div className="text-center text-amber-300 font-bold bg-amber-950/80 border-4 border-amber-600 p-3.5 rounded-2xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] w-full box-border text-sm">
               Waiting for the Host to start the game...
             </div>
           )}
@@ -375,20 +385,23 @@ export default function App() {
   // --- WIN SCREEN ---
   if (roomData.status === 'game-over') {
     return (
-      <div className="min-h-screen comic-bg text-white p-8 flex flex-col items-center justify-center text-center">
-        <div className="comic-panel p-10 rounded-3xl max-w-xl w-full comic-glow-gold flex flex-col items-center">
-          <h1 className="text-4xl sm:text-5xl font-black text-amber-400 mb-4 drop-shadow-[2px_2px_0px_#000]">🏆 WE HAVE A WINNER! 🏆</h1>
-          <p className="text-2xl sm:text-3xl font-black text-white mb-6">{roomData.winner} reached {WINNING_SCORE} points!</p>
+      <div className="min-h-screen comic-bg text-white p-6 flex flex-col items-center justify-center text-center">
+        <div 
+          className="comic-panel p-8 rounded-3xl flex flex-col items-center box-border mx-auto"
+          style={{ width: '560px', maxWidth: '100%' }}
+        >
+          <h1 className="text-3xl sm:text-4xl font-black text-amber-400 mb-3 drop-shadow-[2px_2px_0px_#000]">🏆 WE HAVE A WINNER! 🏆</h1>
+          <p className="text-xl sm:text-2xl font-black text-white mb-5">{roomData.winner} reached {WINNING_SCORE} points!</p>
           
-          <div className="mb-8 bg-zinc-950 p-4 rounded-2xl border-4 border-black w-full">
-            <h3 className="text-xs font-black uppercase tracking-wider text-zinc-400 mb-3 text-left">Final Standings</h3>
+          <div className="mb-6 bg-zinc-950 p-4 rounded-2xl border-4 border-black w-full">
+            <h3 className="text-xs font-black uppercase tracking-wider text-zinc-400 mb-2.5 text-left">Final Standings</h3>
             <div className="flex flex-col gap-2">
               {Object.values(roomData.players || {})
                 .sort((a, b) => (b.score || 0) - (a.score || 0))
                 .map((p, idx) => (
-                  <div key={idx} className="flex justify-between items-center px-4 py-2.5 bg-zinc-900 rounded-xl border-2 border-black">
-                    <span className="font-bold text-white">{p.name}</span>
-                    <span className="text-emerald-400 font-black">{p.score || 0} pts</span>
+                  <div key={idx} className="flex justify-between items-center px-3.5 py-2 bg-zinc-900 rounded-xl border-2 border-black">
+                    <span className="font-bold text-white text-sm">{p.name}</span>
+                    <span className="text-emerald-400 font-black text-sm">{p.score || 0} pts</span>
                   </div>
                 ))}
             </div>
@@ -403,7 +416,7 @@ export default function App() {
               });
               await update(ref(db, `rooms/${currentRoom}/players`), resetPlayers);
             }}
-            className="bg-amber-400 hover:bg-amber-300 text-black font-black py-3 px-8 rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-lg transition-all active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer"
+            className="bg-amber-400 hover:bg-amber-300 text-black font-black py-2.5 px-6 rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-base transition-all active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer"
           >
             PLAY AGAIN
           </button>
@@ -425,8 +438,8 @@ export default function App() {
   return (
     <div className="min-h-screen comic-bg text-white p-6 flex flex-col items-center">
       {/* Header & Scoreboard */}
-      <div className={`w-full max-w-4xl flex justify-between items-center mb-8 comic-panel px-6 py-4 rounded-2xl ${phaseGlowClass}`}>
-        <span className="text-emerald-400 font-black text-sm tracking-wider">ROOM: {currentRoom}</span>
+      <div className={`w-full max-w-4xl flex justify-between items-center mb-6 comic-panel px-5 py-3.5 rounded-2xl ${phaseGlowClass}`}>
+        <span className="text-emerald-400 font-black text-xs tracking-wider">ROOM: {currentRoom}</span>
         <div className="flex gap-2 items-center flex-wrap justify-center">
           {Object.values(roomData.players || {}).map((p, idx) => (
             <span key={idx} className={`text-xs px-3 py-1 rounded-full border-2 border-black font-bold ${roomData.judge && roomData.players[roomData.judge]?.name === p.name ? 'bg-purple-900 text-purple-200' : 'bg-zinc-800 text-zinc-200'}`}>
@@ -438,7 +451,7 @@ export default function App() {
       </div>
 
       {/* Prompt Card */}
-      <div className="mb-8">
+      <div className="mb-6">
         {roomData.currentGreen && (
           <GreenCard 
             text={roomData.currentGreen.text} 
@@ -449,10 +462,10 @@ export default function App() {
       {/* JUDGING PHASE / SUBMISSIONS REVEAL */}
       {roomData.status === 'judging' ? (
         isCurrentJudge ? (
-          <div className="w-full max-w-4xl flex flex-col items-center mb-8">
-            <h3 className="text-2xl font-black text-purple-300 mb-2 drop-shadow tracking-wide">SELECT THE WINNER!</h3>
-            <p className="text-zinc-300 text-sm font-bold mb-6">All submissions are in. Click any card below to award the point:</p>
-            <div className="flex flex-wrap gap-8 justify-center">
+          <div className="w-full max-w-4xl flex flex-col items-center mb-6">
+            <h3 className="text-xl font-black text-purple-300 mb-2 drop-shadow tracking-wide">SELECT THE WINNER!</h3>
+            <p className="text-zinc-300 text-xs font-bold mb-5">All submissions are in. Click any card below to award the point:</p>
+            <div className="flex flex-wrap gap-6 justify-center">
               {Object.entries(roomData.submissions || {}).map(([playerKey, sub]) => (
                 <div 
                   key={playerKey} 
@@ -471,45 +484,54 @@ export default function App() {
             </div>
           </div>
         ) : (
-          <div className="text-center comic-panel p-8 rounded-3xl max-w-md w-full mb-8 comic-glow-purple">
-            <h3 className="text-2xl font-black text-purple-300 mb-2">JUDGING IN PROGRESS!</h3>
-            <p className="text-zinc-200 text-sm font-bold">All cards submitted anonymously. {roomData.players[roomData.judge]?.name} is reviewing them...</p>
+          <div 
+            className="comic-panel text-center p-6 rounded-3xl mb-6 comic-glow-purple box-border mx-auto"
+            style={{ width: '560px', maxWidth: '100%' }}
+          >
+            <h3 className="text-xl font-black text-purple-300 mb-2">JUDGING IN PROGRESS!</h3>
+            <p className="text-zinc-200 text-xs font-bold">All cards submitted anonymously. {roomData.players[roomData.judge]?.name} is reviewing them...</p>
           </div>
         )
       ) : isCurrentJudge ? (
         // --- JUDGE WAITING SCREEN ---
-        <div className="w-full max-w-4xl flex flex-col items-center mb-8">
-          <div className="text-center comic-panel p-6 rounded-3xl max-w-md w-full mb-6 comic-glow-purple">
-            <h3 className="text-xl font-black text-purple-300 mb-2">YOU ARE THE JUDGE! 👑</h3>
-            <p className="text-zinc-200 text-sm font-bold mb-3">Waiting for players to submit their cards...</p>
-            <div className="text-sm font-black text-amber-400 bg-purple-900 border-2 border-black px-4 py-1.5 rounded-full inline-block">
+        <div className="w-full max-w-4xl flex flex-col items-center mb-6">
+          <div 
+            className="comic-panel text-center p-5 rounded-3xl mb-5 comic-glow-purple box-border mx-auto"
+            style={{ width: '560px', maxWidth: '100%' }}
+          >
+            <h3 className="text-lg font-black text-purple-300 mb-1.5">YOU ARE THE JUDGE! 👑</h3>
+            <p className="text-zinc-200 text-xs font-bold mb-2.5">Waiting for players to submit their cards...</p>
+            <div className="text-xs font-black text-amber-400 bg-purple-900 border-2 border-black px-3.5 py-1 rounded-full inline-block">
               Submissions: {submissionsCount} / {totalPlayersCount - 1}
             </div>
           </div>
 
-          <h4 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-4">SUBMITTED CARDS (WAITING TO REVEAL)</h4>
-          <div className="flex flex-wrap justify-center gap-6">
+          <h4 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-3">SUBMITTED CARDS (WAITING TO REVEAL)</h4>
+          <div className="flex flex-wrap justify-center gap-5">
             {Array.from({ length: submissionsCount }).map((_, idx) => (
               <CardBack key={idx} />
             ))}
             {submissionsCount === 0 && (
-              <p className="text-zinc-400 italic text-sm font-semibold">No submissions yet...</p>
+              <p className="text-zinc-400 italic text-xs font-semibold">No submissions yet...</p>
             )}
           </div>
         </div>
       ) : hasSubmitted ? (
         // --- PLAYER WAITING SCREEN ---
-        <div className="w-full max-w-4xl flex flex-col items-center mb-8">
-          <div className="text-center comic-panel p-6 rounded-3xl max-w-md w-full mb-6 comic-glow-emerald">
-            <h3 className="text-xl font-black text-emerald-300 mb-2">COMBO SUBMITTED! ✅</h3>
-            <p className="text-zinc-200 text-sm font-bold">Waiting for other players and the judge...</p>
-            <div className="text-xs text-emerald-400 font-black mt-2">
+        <div className="w-full max-w-4xl flex flex-col items-center mb-6">
+          <div 
+            className="comic-panel text-center p-5 rounded-3xl mb-5 comic-glow-emerald box-border mx-auto"
+            style={{ width: '560px', maxWidth: '100%' }}
+          >
+            <h3 className="text-lg font-black text-emerald-300 mb-1.5">COMBO SUBMITTED! ✅</h3>
+            <p className="text-zinc-200 text-xs font-bold">Waiting for other players and the judge...</p>
+            <div className="text-xs text-emerald-400 font-black mt-1.5">
               Submissions: {submissionsCount} / {totalPlayersCount - 1}
             </div>
           </div>
 
-          <h4 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-4">TABLE STATUS</h4>
-          <div className="flex flex-wrap justify-center gap-6">
+          <h4 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-3">TABLE STATUS</h4>
+          <div className="flex flex-wrap justify-center gap-5">
             {Array.from({ length: submissionsCount }).map((_, idx) => (
               <CardBack key={idx} />
             ))}
@@ -517,11 +539,11 @@ export default function App() {
         </div>
       ) : (
         // --- PLAYER SELECTION HAND SCREEN ---
-        <div className="w-full max-w-4xl flex flex-col items-center mb-8">
-          <h3 className="text-lg font-black text-zinc-200 mb-4 tracking-wider uppercase drop-shadow">
+        <div className="w-full max-w-4xl flex flex-col items-center mb-6">
+          <h3 className="text-base font-black text-zinc-200 mb-3 tracking-wider uppercase drop-shadow">
             SELECT {requiredPick} CARD{requiredPick > 1 ? 'S' : ''} FROM YOUR HAND:
           </h3>
-          <div className="flex flex-wrap gap-6 justify-center">
+          <div className="flex flex-wrap gap-5 justify-center">
             {playerHand.map((card) => {
               const selectedIndex = selectedCards.findIndex(c => c.uniqueKey === card.uniqueKey);
               const isSelected = selectedIndex !== -1;
@@ -541,7 +563,7 @@ export default function App() {
           </div>
 
           {selectedCards.length === requiredPick && (
-            <div className="mt-8">
+            <div className="mt-6">
               <SubmitButton 
                 onClick={handleSubmitCard} 
                 label={requiredPick > 1 ? 'SUBMIT COMBO!' : 'SUBMIT CARD!'} 
@@ -565,7 +587,7 @@ function HostLobbyButton({ onClick }) {
       <img 
         src={`${import.meta.env.BASE_URL}host-lobby-button.png`} 
         alt="Host Lobby" 
-        className="w-56 sm:w-64 h-auto drop-shadow-[5px_5px_0px_rgba(0,0,0,1)] transition-all"
+        className="w-40 sm:w-48 h-auto drop-shadow-[4px_4px_0px_rgba(0,0,0,1)] transition-all"
       />
     </button>
   );
@@ -581,7 +603,24 @@ function JoinRoomButton({ onClick }) {
       <img 
         src={`${import.meta.env.BASE_URL}join-room-button.png`} 
         alt="Join Room" 
-        className="w-44 sm:w-48 h-auto drop-shadow-[5px_5px_0px_rgba(0,0,0,1)] transition-all"
+        className="w-32 sm:w-38 h-auto drop-shadow-[4px_4px_0px_rgba(0,0,0,1)] transition-all"
+      />
+    </button>
+  );
+}
+
+// --- CUSTOM START GAME BUTTON COMPONENT ---
+function StartGameButton({ onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group relative border-none bg-transparent p-0 transition-transform duration-150 select-none hover:scale-105 active:scale-95 cursor-pointer inline-flex items-center justify-center"
+    >
+      <img 
+        src={`${import.meta.env.BASE_URL}start-game-button.png`} 
+        alt="Start Game" 
+        className="w-44 sm:w-52 h-auto drop-shadow-[5px_5px_0px_rgba(0,0,0,1)] transition-all"
       />
     </button>
   );
@@ -603,7 +642,7 @@ function SubmitButton({ onClick, disabled, label = "SUBMIT CARD!" }) {
       <img 
         src={`${import.meta.env.BASE_URL}submit-card-button.png`} 
         alt={label} 
-        className="w-48 sm:w-60 h-auto drop-shadow-[6px_6px_0px_rgba(0,0,0,1)] transition-all"
+        className="w-44 sm:w-52 h-auto drop-shadow-[5px_5px_0px_rgba(0,0,0,1)] transition-all"
       />
     </button>
   );
