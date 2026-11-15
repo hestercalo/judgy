@@ -257,8 +257,8 @@ export default function App() {
     return (
       <div className="min-h-screen comic-bg flex items-center justify-center p-6">
         <div 
-          className="comic-panel p-6 rounded-3xl flex flex-col items-center shadow-2xl box-border"
-          style={{ width: '560px', maxWidth: '100%' }}
+          className="comic-panel p-6 rounded-3xl flex flex-col items-center comic-glow-emerald shadow-2xl box-border"
+          style={{ width: '480px', maxWidth: '100%' }}
         >
           <img 
             src={`${import.meta.env.BASE_URL}loading-screen.gif`} 
@@ -278,12 +278,12 @@ export default function App() {
     return (
       <div className="min-h-screen w-full comic-bg text-white flex items-center justify-center p-4">
         <div 
-          className="comic-panel p-8 sm:p-10 rounded-3xl flex flex-col gap-5 shadow-2xl box-border overflow-hidden"
-          style={{ width: '560px', maxWidth: '100%' }}
+          className="comic-panel p-8 sm:p-10 rounded-3xl flex flex-col gap-5 comic-glow-emerald shadow-2xl box-border overflow-hidden"
+          style={{ width: '480px', maxWidth: '100%' }}
         >
           <div className="text-center">
             <h1 className="text-5xl sm:text-6xl font-black tracking-tight text-emerald-400 mb-1 drop-shadow-[2px_2px_0px_#000]">JUDGY</h1>
-            <p className="text-zinc-300 font-bold text-xs sm:text-sm">The party game of questionable choices.</p>
+            <p className="text-zinc-300 font-bold text-xs sm:text-sm">The game where only you can be the judge!</p>
           </div>
 
           <div className="flex flex-col items-center gap-4 w-full min-w-0">
@@ -292,7 +292,7 @@ export default function App() {
               <label className="block text-xs font-black uppercase tracking-wider text-emerald-400 mb-1 w-full text-left">Your Name</label>
               <input 
                 type="text" 
-                placeholder="e.g. Principal Smith" 
+                placeholder="例：Steven J. Kuiya, Roxy Music, Jason Jones, etc" 
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
                 className="w-full max-w-full box-border bg-zinc-900 border-4 border-black rounded-xl px-3.5 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 font-bold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
@@ -311,7 +311,8 @@ export default function App() {
             </div>
 
             {/* Room Code & Join Button */}
-            <div className="flex gap-4 w-full items-end justify-between min-w-0">
+            {/* Room Code on Left, Join Room Button with Guaranteed Inline Margin */}
+            <div className="flex items-end w-full min-w-0">
               <div className="flex flex-col w-36 sm:w-40 shrink-0">
                 <label className="block text-xs font-black uppercase tracking-wider text-purple-400 mb-1 w-full text-left">Room Code</label>
                 <input 
@@ -323,7 +324,8 @@ export default function App() {
                   className="w-full box-border bg-zinc-900 border-4 border-black rounded-xl px-3 py-2.5 text-white uppercase text-center tracking-widest font-black text-sm focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/30 shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all"
                 />
               </div>
-              <div className="flex justify-end shrink-0">
+              {/* Inline style guarantees it will shift left. Change '-60px' to '-80px' or more if you want it further left! */}
+              <div className="flex shrink-0" style={{ marginLeft: '-60px' }}>
                 <JoinRoomButton onClick={handleJoinRoom} />
               </div>
             </div>
@@ -333,7 +335,7 @@ export default function App() {
     );
   }
 
-  // --- LOBBY SCREEN ---
+  // --- LOBBY SCREEN (WITH GLOW RESTORED) ---
   if (roomData.status === 'lobby') {
     const myPlayerEntry = Object.entries(roomData.players || {}).find(([_, p]) => p.name === playerName);
     const isHost = myPlayerEntry ? myPlayerEntry[1].isHost : false;
@@ -341,8 +343,8 @@ export default function App() {
     return (
       <div className="min-h-screen comic-bg text-white p-6 flex flex-col items-center justify-center">
         <div 
-          className="comic-panel p-5 rounded-3xl mb-5 flex justify-between items-center box-border mx-auto"
-          style={{ width: '560px', maxWidth: '100%' }}
+          className="comic-panel p-5 rounded-3xl mb-5 flex justify-between items-center box-border mx-auto comic-glow-emerald"
+          style={{ width: '480px', maxWidth: '100%' }}
         >
           <div>
             <span className="text-xs text-emerald-400 uppercase tracking-widest font-black">Room Code</span>
@@ -355,8 +357,8 @@ export default function App() {
         </div>
 
         <div 
-          className="comic-panel p-6 rounded-3xl mb-5 flex flex-col items-center box-border mx-auto overflow-hidden"
-          style={{ width: '560px', maxWidth: '100%' }}
+          className="comic-panel p-6 rounded-3xl mb-5 flex flex-col items-center box-border mx-auto overflow-hidden comic-glow-emerald"
+          style={{ width: '480px', maxWidth: '100%' }}
         >
           <h3 className="text-xs font-black text-zinc-300 uppercase tracking-wider mb-3 w-full text-left">Players in Lobby:</h3>
           <ul className="flex flex-col gap-2.5 mb-5 w-full items-center box-border">
@@ -387,8 +389,8 @@ export default function App() {
     return (
       <div className="min-h-screen comic-bg text-white p-6 flex flex-col items-center justify-center text-center">
         <div 
-          className="comic-panel p-8 rounded-3xl flex flex-col items-center box-border mx-auto"
-          style={{ width: '560px', maxWidth: '100%' }}
+          className="comic-panel p-8 rounded-3xl flex flex-col items-center box-border mx-auto comic-glow-gold"
+          style={{ width: '480px', maxWidth: '100%' }}
         >
           <h1 className="text-3xl sm:text-4xl font-black text-amber-400 mb-3 drop-shadow-[2px_2px_0px_#000]">🏆 WE HAVE A WINNER! 🏆</h1>
           <p className="text-xl sm:text-2xl font-black text-white mb-5">{roomData.winner} reached {WINNING_SCORE} points!</p>
@@ -486,7 +488,7 @@ export default function App() {
         ) : (
           <div 
             className="comic-panel text-center p-6 rounded-3xl mb-6 comic-glow-purple box-border mx-auto"
-            style={{ width: '560px', maxWidth: '100%' }}
+            style={{ width: '480px', maxWidth: '100%' }}
           >
             <h3 className="text-xl font-black text-purple-300 mb-2">JUDGING IN PROGRESS!</h3>
             <p className="text-zinc-200 text-xs font-bold">All cards submitted anonymously. {roomData.players[roomData.judge]?.name} is reviewing them...</p>
@@ -497,7 +499,7 @@ export default function App() {
         <div className="w-full max-w-4xl flex flex-col items-center mb-6">
           <div 
             className="comic-panel text-center p-5 rounded-3xl mb-5 comic-glow-purple box-border mx-auto"
-            style={{ width: '560px', maxWidth: '100%' }}
+            style={{ width: '480px', maxWidth: '100%' }}
           >
             <h3 className="text-lg font-black text-purple-300 mb-1.5">YOU ARE THE JUDGE! 👑</h3>
             <p className="text-zinc-200 text-xs font-bold mb-2.5">Waiting for players to submit their cards...</p>
@@ -521,7 +523,7 @@ export default function App() {
         <div className="w-full max-w-4xl flex flex-col items-center mb-6">
           <div 
             className="comic-panel text-center p-5 rounded-3xl mb-5 comic-glow-emerald box-border mx-auto"
-            style={{ width: '560px', maxWidth: '100%' }}
+            style={{ width: '480px', maxWidth: '100%' }}
           >
             <h3 className="text-lg font-black text-emerald-300 mb-1.5">COMBO SUBMITTED! ✅</h3>
             <p className="text-zinc-200 text-xs font-bold">Waiting for other players and the judge...</p>
