@@ -257,22 +257,27 @@ if (loading) {
     return (
       <div className="min-h-screen comic-bg flex items-center justify-center p-6">
         <div 
-          className="comic-panel p-5 rounded-3xl flex flex-col items-center comic-glow-emerald shadow-2xl box-border gap-4"
+          className="comic-panel p-6 rounded-3xl flex flex-col items-center comic-glow-emerald shadow-2xl box-border gap-6"
           style={{ width: '480px', maxWidth: '100%' }}
         >
-          {/* GIF Frame with edge-crop scaling to eliminate the baked-in white border */}
-          <div className="w-full overflow-hidden rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-zinc-950 relative">
+          {/* Header Title */}
+          <div className="text-center w-full">
+            <h2 className="text-2xl font-black tracking-widest text-emerald-400 drop-shadow-[2px_2px_0px_#000]">LOADING GAME</h2>
+          </div>
+
+          {/* GIF Frame */}
+          <div className="w-full rounded-2xl border-4 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden bg-black">
             <img 
               src={`${import.meta.env.BASE_URL}loading-screen.gif`} 
               alt="Loading Judgy..." 
-              className="w-full h-auto block object-cover scale-[1.04] m-0 transform origin-center"
+              className="w-full h-auto block m-0 object-cover"
             />
           </div>
 
-          {/* Loading Text */}
-          <p className="text-emerald-400 font-black tracking-widest text-lg animate-pulse m-0">
-            LOADING GAME...
-          </p>
+          {/* Loading Status Box */}
+          <div className="text-center text-emerald-300 font-bold bg-zinc-900 border-4 border-black p-3.5 rounded-2xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] w-full box-border text-sm animate-pulse">
+            Getting things ready...
+          </div>
         </div>
       </div>
     );
