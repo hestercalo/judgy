@@ -311,7 +311,6 @@ export default function App() {
             </div>
 
             {/* Room Code & Join Button */}
-            {/* Room Code on Left, Join Room Button with Guaranteed Inline Margin */}
             <div className="flex items-end w-full min-w-0">
               <div className="flex flex-col w-36 sm:w-40 shrink-0">
                 <label className="block text-xs font-black uppercase tracking-wider text-purple-400 mb-1 w-full text-left">Room Code</label>
@@ -324,7 +323,7 @@ export default function App() {
                   className="w-full box-border bg-zinc-900 border-4 border-black rounded-xl px-3 py-2.5 text-white uppercase text-center tracking-widest font-black text-sm focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/30 shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all"
                 />
               </div>
-              {/* Inline style guarantees it will shift left. Change '-60px' to '-80px' or more if you want it further left! */}
+              {/* Change this to modify button*/}
               <div className="flex shrink-0" style={{ marginLeft: '-60px' }}>
                 <JoinRoomButton onClick={handleJoinRoom} />
               </div>
@@ -335,7 +334,7 @@ export default function App() {
     );
   }
 
-  // --- LOBBY SCREEN (WITH GLOW RESTORED) ---
+  // --- LOBBY SCREEN ---
   if (roomData.status === 'lobby') {
     const myPlayerEntry = Object.entries(roomData.players || {}).find(([_, p]) => p.name === playerName);
     const isHost = myPlayerEntry ? myPlayerEntry[1].isHost : false;
