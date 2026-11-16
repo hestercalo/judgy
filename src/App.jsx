@@ -253,19 +253,24 @@ export default function App() {
     });
   };
 
-  if (loading) {
+if (loading) {
     return (
       <div className="min-h-screen comic-bg flex items-center justify-center p-6">
         <div 
-          className="comic-panel p-6 rounded-3xl flex flex-col items-center comic-glow-emerald shadow-2xl box-border"
+          className="comic-panel p-5 rounded-3xl flex flex-col items-center comic-glow-emerald shadow-2xl box-border gap-4"
           style={{ width: '480px', maxWidth: '100%' }}
         >
-          <img 
-            src={`${import.meta.env.BASE_URL}loading-screen.gif`} 
-            alt="Loading Judgy..." 
-            className="w-full h-auto rounded-2xl object-cover border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
-          />
-          <p className="text-emerald-400 font-black tracking-widest mt-4 text-lg animate-pulse">
+          {/* GIF Frame with edge-crop scaling to eliminate the baked-in white border */}
+          <div className="w-full overflow-hidden rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-zinc-950 relative">
+            <img 
+              src={`${import.meta.env.BASE_URL}loading-screen.gif`} 
+              alt="Loading Judgy..." 
+              className="w-full h-auto block object-cover scale-[1.04] m-0 transform origin-center"
+            />
+          </div>
+
+          {/* Loading Text */}
+          <p className="text-emerald-400 font-black tracking-widest text-lg animate-pulse m-0">
             LOADING GAME...
           </p>
         </div>
