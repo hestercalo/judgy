@@ -342,42 +342,46 @@ export default function App() {
     return (
       <div className="min-h-screen comic-bg text-white p-6 flex flex-col items-center justify-center">
         <div 
-          className="comic-panel p-5 rounded-3xl mb-5 flex justify-between items-center box-border mx-auto comic-glow-emerald"
+          className="comic-panel p-6 rounded-3xl flex flex-col box-border mx-auto comic-glow-emerald gap-6"
           style={{ width: '480px', maxWidth: '100%' }}
         >
-          <div>
-            <span className="text-xs text-emerald-400 uppercase tracking-widest font-black">Room Code</span>
-            <h2 className="text-4xl font-black tracking-widest text-white">{currentRoom}</h2>
-          </div>
-          <div className="text-right">
-            <span className="text-xs text-zinc-400 uppercase tracking-widest font-black">Players Connected</span>
-            <p className="text-2xl font-black text-emerald-300">{Object.keys(roomData.players || {}).length}</p>
-          </div>
-        </div>
-
-        <div 
-          className="comic-panel p-6 rounded-3xl mb-5 flex flex-col items-center box-border mx-auto overflow-hidden comic-glow-emerald"
-          style={{ width: '480px', maxWidth: '100%' }}
-        >
-          <h3 className="text-xs font-black text-zinc-300 uppercase tracking-wider mb-3 w-full text-left">Players in Lobby:</h3>
-          <ul className="flex flex-col gap-2.5 mb-5 w-full items-center box-border">
-            {Object.values(roomData.players || {}).map((p, idx) => (
-              <li key={idx} className="bg-zinc-900 px-4 py-3 rounded-2xl border-4 border-black flex items-center justify-between shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] w-full max-w-full box-border">
-                <span className="font-bold text-white text-sm truncate pr-2">{p.name} {p.isHost && '👑'}</span>
-                <span className="text-xs font-black text-emerald-400 shrink-0">Score: {p.score || 0}</span>
-              </li>
-            ))}
-          </ul>
-
-          {isHost ? (
-            <div className="flex justify-center w-full pt-2">
-              <StartGameButton onClick={handleStartGame} />
+          {/* Top Section: Room Code & Player Count */}
+          <div className="flex justify-between items-center w-full">
+            <div>
+              <span className="text-xs text-emerald-400 uppercase tracking-widest font-black">Room Code</span>
+              <h2 className="text-4xl font-black tracking-widest text-white">{currentRoom}</h2>
             </div>
-          ) : (
-            <div className="text-center text-amber-300 font-bold bg-amber-950/80 border-4 border-amber-600 p-3.5 rounded-2xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] w-full box-border text-sm">
-              Waiting for the Host to start the game...
+            <div className="text-right">
+              <span className="text-xs text-zinc-400 uppercase tracking-widest font-black">Players Connected</span>
+              <p className="text-2xl font-black text-emerald-300">{Object.keys(roomData.players || {}).length}</p>
             </div>
-          )}
+          </div>
+
+          {/* Divider Line */}
+          <div className="border-t-4 border-zinc-800 w-full"></div>
+
+          {/* Bottom Section: Players List & Start Button */}
+          <div className="flex flex-col items-center w-full">
+            <h3 className="text-xs font-black text-zinc-300 uppercase tracking-wider mb-3 w-full text-left">Players in Lobby:</h3>
+            <ul className="flex flex-col gap-2.5 mb-5 w-full items-center box-border">
+              {Object.values(roomData.players || {}).map((p, idx) => (
+                <li key={idx} className="bg-zinc-900 px-4 py-3 rounded-2xl border-4 border-black flex items-center justify-between shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] w-full max-w-full box-border">
+                  <span className="font-bold text-white text-sm truncate pr-2">{p.name} {p.isHost && '👑'}</span>
+                  <span className="text-xs font-black text-emerald-400 shrink-0">Score: {p.score || 0}</span>
+                </li>
+              ))}
+            </ul>
+
+            {isHost ? (
+              <div className="flex justify-center w-full pt-2">
+                <StartGameButton onClick={handleStartGame} />
+              </div>
+            ) : (
+              <div className="text-center text-amber-300 font-bold bg-amber-950/80 border-4 border-amber-600 p-3.5 rounded-2xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] w-full box-border text-sm">
+                Waiting for the Host to start the game...
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
