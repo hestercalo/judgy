@@ -17,6 +17,6 @@ If you are developing a production application, we recommend using TypeScript wi
 
 ## Afterword
 
-This app was inspired by popular card games such as Cards Against Humanity and Apples to Apples.
+This app was inspired by popular party card games such as Cards Against Humanity and Apples to Apples. It was created primarily for use in middle school English classes in rural Japan.
 
-This game is to be used for educational purposes only. If there are any motifs within the game that a party may deem unfit, please contact me and such motfis will be swiftly removed. 
+This project is strictly for educational, non-commercial purposes. If any content or motifs within the game are deemed inappropriate or need revision, please contact me and they will be swiftly removed.
