@@ -293,7 +293,7 @@ if (loading) {
         >
           <div className="text-center">
             <h1 className="text-5xl sm:text-6xl font-black tracking-tight text-emerald-400 mb-1 drop-shadow-[2px_2px_0px_#000]">JUDGY</h1>
-            <p className="text-zinc-300 font-bold text-xs sm:text-sm">The game where only you can be the judge!</p>
+            <p className="text-zinc-300 font-bold text-xs sm:text-sm">The game where only you can be the judge! Designed to be used for educational purposes only.</p>
           </div>
 
           <div className="flex flex-col items-center gap-4 w-full min-w-0">
