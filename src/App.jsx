@@ -4,7 +4,6 @@ import { db } from './firebase';
 import { ref, set, get, child, update, onValue } from 'firebase/database';
 
 const SHEET_ID = '1ZMeRbwlUTBUHxoF1arWMCwHg-GfAB7jmJOh5mJlJnyA';
-const WINNING_SCORE = 7;
 
 export default function App() {
   const [greenCards, setGreenCards] = useState([]);
@@ -13,6 +12,7 @@ export default function App() {
 
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
+  const [targetScore, setTargetScore] = useState(7);
   const [currentRoom, setCurrentRoom] = useState(null);
   const [roomData, setRoomData] = useState(null);
   
@@ -112,6 +112,7 @@ export default function App() {
       await set(ref(db, `rooms/${newCode}`), {
         host: playerKey,
         status: 'lobby',
+        winningScore: Number(targetScore) || 7,
         players: {
           [playerKey]: { name: playerName, score: 0, isHost: true }
         }
@@ -164,6 +165,16 @@ export default function App() {
       submissions: null,
       winner: null
     });
+  };
+
+  const handleUpdateWinningScore = async (newScore) => {
+    const scoreNum = Math.max(1, Math.min(20, Number(newScore) || 7));
+    setTargetScore(scoreNum);
+    if (currentRoom) {
+      await update(ref(db, `rooms/${currentRoom}`), {
+        winningScore: scoreNum
+      });
+    }
   };
 
   const handleCardClick = (card) => {
@@ -227,12 +238,13 @@ export default function App() {
   const handlePickWinner = async (winnerKey) => {
     const currentScore = roomData.players[winnerKey]?.score || 0;
     const newScore = currentScore + 1;
+    const gameGoal = roomData.winningScore || 7;
     
     await update(ref(db, `rooms/${currentRoom}/players/${winnerKey}`), {
       score: newScore
     });
 
-    if (newScore >= WINNING_SCORE) {
+    if (newScore >= gameGoal) {
       await update(ref(db, `rooms/${currentRoom}`), {
         status: 'game-over',
         winner: roomData.players[winnerKey].name
@@ -253,11 +265,11 @@ export default function App() {
     });
   };
 
-if (loading) {
+  if (loading) {
     return (
       <div className="min-h-screen comic-bg flex items-center justify-center p-6">
         <div 
-          className="comic-panel p-6 rounded-3xl flex flex-col items-center comic-glow-emerald shadow-2xl box-border gap-6"
+          className="comic-panel p-6 rounded-3xl flex flex-col items-center comic-glow-emerald shadow-2xl box-border gap-6 bg-[#18181f]"
           style={{ width: '480px', maxWidth: '100%' }}
         >
           {/* Header Title */}
@@ -265,8 +277,8 @@ if (loading) {
             <h2 className="text-2xl font-black tracking-widest text-emerald-400 drop-shadow-[2px_2px_0px_#000]">LOADING GAME</h2>
           </div>
 
-          {/* GIF Frame */}
-          <div className="w-full rounded-2xl border-4 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden bg-black">
+          {/* Clean GIF Frame with matching background */}
+          <div className="w-full rounded-2xl border-4 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden bg-[#18181f]">
             <img 
               src={`${import.meta.env.BASE_URL}loading-screen.gif`} 
               alt="Loading Judgy..." 
@@ -309,6 +321,19 @@ if (loading) {
               />
             </div>
 
+            {/* Target Score Selector */}
+            <div className="w-2/3 min-w-[240px] flex flex-col items-center">
+              <label className="block text-xs font-black uppercase tracking-wider text-amber-400 mb-1 w-full text-left">Target Score to Win</label>
+              <input 
+                type="number" 
+                min={1} 
+                max={20}
+                value={targetScore}
+                onChange={(e) => setTargetScore(e.target.value)}
+                className="w-full box-border bg-zinc-900 border-4 border-black rounded-xl px-3.5 py-2.5 text-white font-black text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:border-amber-400 text-center"
+              />
+            </div>
+
             {/* Host Lobby Button */}
             <div className="flex justify-center w-full pt-1">
               <HostLobbyButton onClick={handleCreateRoom} />
@@ -333,7 +358,6 @@ if (loading) {
                   className="w-full box-border bg-zinc-900 border-4 border-black rounded-xl px-3 py-2.5 text-white uppercase text-center tracking-widest font-black text-sm focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/30 shadow-[2px_2px_0px_rgba(0,0,0,1)] transition-all"
                 />
               </div>
-              {/* Change this to modify button*/}
               <div className="flex shrink-0" style={{ marginLeft: '-60px' }}>
                 <JoinRoomButton onClick={handleJoinRoom} />
               </div>
@@ -355,15 +379,26 @@ if (loading) {
           className="comic-panel p-6 rounded-3xl flex flex-col box-border mx-auto comic-glow-emerald gap-6"
           style={{ width: '480px', maxWidth: '100%' }}
         >
-          {/* Top Section: Room Code & Player Count */}
+          {/* Top Section: Room Code & Winning Score */}
           <div className="flex justify-between items-center w-full">
             <div>
               <span className="text-xs text-emerald-400 uppercase tracking-widest font-black">Room Code</span>
               <h2 className="text-4xl font-black tracking-widest text-white">{currentRoom}</h2>
             </div>
             <div className="text-right">
-              <span className="text-xs text-zinc-400 uppercase tracking-widest font-black">Players Connected</span>
-              <p className="text-2xl font-black text-emerald-300">{Object.keys(roomData.players || {}).length}</p>
+              <span className="text-xs text-amber-400 uppercase tracking-widest font-black">Winning Score</span>
+              {isHost ? (
+                <input 
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={roomData.winningScore || 7}
+                  onChange={(e) => handleUpdateWinningScore(e.target.value)}
+                  className="w-20 bg-zinc-900 border-2 border-black rounded-lg text-amber-400 font-black text-lg text-center px-2 py-0.5 mt-1 focus:outline-none focus:border-amber-400"
+                />
+              ) : (
+                <p className="text-2xl font-black text-amber-300">{roomData.winningScore || 7} pts</p>
+              )}
             </div>
           </div>
 
@@ -399,6 +434,7 @@ if (loading) {
 
   // --- WIN SCREEN ---
   if (roomData.status === 'game-over') {
+    const goalScore = roomData.winningScore || 7;
     return (
       <div className="min-h-screen comic-bg text-white p-6 flex flex-col items-center justify-center text-center">
         <div 
@@ -406,7 +442,7 @@ if (loading) {
           style={{ width: '480px', maxWidth: '100%' }}
         >
           <h1 className="text-3xl sm:text-4xl font-black text-amber-400 mb-3 drop-shadow-[2px_2px_0px_#000]">🏆 WE HAVE A WINNER! 🏆</h1>
-          <p className="text-xl sm:text-2xl font-black text-white mb-5">{roomData.winner} reached {WINNING_SCORE} points!</p>
+          <p className="text-xl sm:text-2xl font-black text-white mb-5">{roomData.winner} reached the target of {goalScore} points!</p>
           
           <div className="mb-6 bg-zinc-950 p-4 rounded-2xl border-4 border-black w-full">
             <h3 className="text-xs font-black uppercase tracking-wider text-zinc-400 mb-2.5 text-left">Final Standings</h3>
@@ -454,7 +490,7 @@ if (loading) {
     <div className="min-h-screen comic-bg text-white p-6 flex flex-col items-center">
       {/* Header & Scoreboard */}
       <div className={`w-full max-w-4xl flex justify-between items-center mb-6 comic-panel px-5 py-3.5 rounded-2xl ${phaseGlowClass}`}>
-        <span className="text-emerald-400 font-black text-xs tracking-wider">ROOM: {currentRoom}</span>
+        <span className="text-emerald-400 font-black text-xs tracking-wider">ROOM: {currentRoom} (Goal: {roomData.winningScore || 7})</span>
         <div className="flex gap-2 items-center flex-wrap justify-center">
           {Object.values(roomData.players || {}).map((p, idx) => (
             <span key={idx} className={`text-xs px-3 py-1 rounded-full border-2 border-black font-bold ${roomData.judge && roomData.players[roomData.judge]?.name === p.name ? 'bg-purple-900 text-purple-200' : 'bg-zinc-800 text-zinc-200'}`}>
