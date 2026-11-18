@@ -277,7 +277,7 @@ export default function App() {
             <h2 className="text-2xl font-black tracking-widest text-emerald-400 drop-shadow-[2px_2px_0px_#000]">LOADING GAME</h2>
           </div>
 
-          {/* Clean GIF Frame with matching background */}
+          {/* GIF Frame */}
           <div className="w-full rounded-2xl border-4 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden bg-[#18181f]">
             <img 
               src={`${import.meta.env.BASE_URL}loading-screen.gif`} 
@@ -410,9 +410,8 @@ export default function App() {
             <h3 className="text-xs font-black text-zinc-300 uppercase tracking-wider mb-3 w-full text-left">Players in Lobby:</h3>
             <ul className="flex flex-col gap-2.5 mb-5 w-full items-center box-border">
               {Object.values(roomData.players || {}).map((p, idx) => (
-                <li key={idx} className="bg-zinc-900 px-4 py-3 rounded-2xl border-4 border-black flex items-center justify-between shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] w-full max-w-full box-border">
+                <li key={idx} className="bg-zinc-900 px-4 py-3 rounded-2xl border-4 border-black flex items-center justify-between shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] w-full max-w-4/5  mx-auto box-border">
                   <span className="font-bold text-white text-sm truncate pr-2">{p.name} {p.isHost && '👑'}</span>
-                  <span className="text-xs font-black text-emerald-400 shrink-0">Score: {p.score || 0}</span>
                 </li>
               ))}
             </ul>
