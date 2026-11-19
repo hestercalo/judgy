@@ -20,6 +20,8 @@ export default function App() {
 
   const [playerHand, setPlayerHand] = useState([]);
   const [selectedCards, setSelectedCards] = useState([]);
+  const [selectedWinnerKey, setSelectedWinnerKey] = useState(null);
+  const [submittingWinner, setSubmittingWinner] = useState(false);
 
   useEffect(() => {
     async function loadCards() {
@@ -31,8 +33,8 @@ export default function App() {
 
         const cleanGreen = greenData
           .filter(row => row.text && row.text.toLowerCase() !== 'text')
-          .map(row => ({
-            id: row.id,
+          .map((row, idx) => ({
+            id: row.id || `g_${idx}`,
             text: row.text,
             pick: Number(row.pick) || 1,
             pack: row.pack || 'Classic'
@@ -67,6 +69,8 @@ export default function App() {
       if (data) {
         setRoomData(data);
         setSelectedCards([]);
+        setSelectedWinnerKey(null);
+        setSubmittingWinner(false);
       }
     });
 
@@ -94,7 +98,7 @@ export default function App() {
     }));
   };
 
-  // Draws `count` cards safely from the shared deck, reshuffling discardPile if needed
+  // Draws `count` cards safely from the shared purple deck, reshuffling discardPile if needed
   const drawFromSharedDeck = async (code, count) => {
     const deckRef = ref(db, `rooms/${code}/deck`);
     const discardRef = ref(db, `rooms/${code}/discardPile`);
@@ -124,6 +128,41 @@ export default function App() {
     return drawnCards;
   };
 
+  // Draws the next green prompt card and moves any active prompt card to greenDiscard
+  const drawNextGreenCard = async (code, previousGreenCard = null) => {
+    const greenDeckRef = ref(db, `rooms/${code}/greenDeck`);
+    const greenDiscardRef = ref(db, `rooms/${code}/greenDiscard`);
+
+    const discardSnap = await get(greenDiscardRef);
+    let currentDiscard = discardSnap.exists() ? discardSnap.val() || [] : [];
+    if (previousGreenCard) {
+      currentDiscard = [...currentDiscard, previousGreenCard];
+    }
+
+    let nextCard = null;
+    let didReshuffleDiscard = false;
+
+    await runTransaction(greenDeckRef, (currentDeck) => {
+      let pool = Array.isArray(currentDeck) ? [...currentDeck] : [];
+
+      if (pool.length === 0 && currentDiscard.length > 0) {
+        pool = shuffleArray(currentDiscard);
+        didReshuffleDiscard = true;
+      }
+
+      nextCard = pool[0] || null;
+      return pool.slice(1);
+    });
+
+    if (didReshuffleDiscard) {
+      await set(greenDiscardRef, []);
+    } else if (previousGreenCard) {
+      await set(greenDiscardRef, currentDiscard);
+    }
+
+    return nextCard;
+  };
+
   const handleCreateRoom = async () => {
     const cleanName = playerName.trim().slice(0, 12);
     if (!cleanName) {
@@ -135,17 +174,20 @@ export default function App() {
     const newCode = generateRoomCode();
     const playerKey = `p_${Date.now()}`;
 
-    const shuffledDeck = shuffleArray(purpleCards);
-    const initialHand = shuffledDeck.slice(0, HAND_SIZE);
-    const remainingDeck = shuffledDeck.slice(HAND_SIZE);
+    const shuffledPurple = shuffleArray(purpleCards);
+    const initialHand = shuffledPurple.slice(0, HAND_SIZE);
+    const remainingPurpleDeck = shuffledPurple.slice(HAND_SIZE);
+    const shuffledGreenDeck = shuffleArray(greenCards);
 
     try {
       await set(ref(db, `rooms/${newCode}`), {
         host: playerKey,
         status: 'lobby',
         winningScore: clampedScore,
-        deck: remainingDeck,
+        deck: remainingPurpleDeck,
         discardPile: [],
+        greenDeck: shuffledGreenDeck,
+        greenDiscard: [],
         players: {
           [playerKey]: { name: cleanName, score: 0, isHost: true }
         }
@@ -198,13 +240,13 @@ export default function App() {
 
   const handleStartGame = async () => {
     if (greenCards.length === 0) return;
-    const randomGreen = greenCards[Math.floor(Math.random() * greenCards.length)];
+    const nextGreen = await drawNextGreenCard(currentRoom, roomData?.currentGreen || null);
     const playerKeys = Object.keys(roomData.players);
     const randomJudge = playerKeys[Math.floor(Math.random() * playerKeys.length)];
 
     await update(ref(db, `rooms/${currentRoom}`), {
       status: 'playing',
-      currentGreen: randomGreen,
+      currentGreen: nextGreen,
       judge: randomJudge,
       submissions: null,
       winner: null
@@ -279,34 +321,51 @@ export default function App() {
     }
   };
 
-  const handlePickWinner = async (winnerKey) => {
+  const handleSelectWinner = (playerKey) => {
+    if (submittingWinner) return;
+    setSelectedWinnerKey(prev => (prev === playerKey ? null : playerKey));
+  };
+
+  const handleConfirmWinner = async () => {
+    if (!selectedWinnerKey || submittingWinner) return;
+
+    const winnerKey = selectedWinnerKey;
     const currentScore = roomData.players[winnerKey]?.score || 0;
     const newScore = currentScore + 1;
     const gameGoal = roomData.winningScore || 7;
 
-    await update(ref(db, `rooms/${currentRoom}/players/${winnerKey}`), {
-      score: newScore
-    });
+    setSubmittingWinner(true);
 
-    if (newScore >= gameGoal) {
-      await update(ref(db, `rooms/${currentRoom}`), {
-        status: 'game-over',
-        winner: roomData.players[winnerKey].name
+    try {
+      await update(ref(db, `rooms/${currentRoom}/players/${winnerKey}`), {
+        score: newScore
       });
-      return;
+
+      if (newScore >= gameGoal) {
+        await update(ref(db, `rooms/${currentRoom}`), {
+          status: 'game-over',
+          winner: roomData.players[winnerKey].name
+        });
+        setSelectedWinnerKey(null);
+        return;
+      }
+
+      const nextGreen = await drawNextGreenCard(currentRoom, roomData.currentGreen || null);
+      const playerKeys = Object.keys(roomData.players);
+      const currentJudgeIndex = playerKeys.indexOf(roomData.judge);
+      const nextJudge = playerKeys[(currentJudgeIndex + 1) % playerKeys.length];
+
+      await update(ref(db, `rooms/${currentRoom}`), {
+        status: 'playing',
+        currentGreen: nextGreen,
+        judge: nextJudge,
+        submissions: null
+      });
+      setSelectedWinnerKey(null);
+    } catch (err) {
+      console.error("Error confirming winner:", err);
+      setSubmittingWinner(false);
     }
-
-    const randomGreen = greenCards[Math.floor(Math.random() * greenCards.length)];
-    const playerKeys = Object.keys(roomData.players);
-    const currentJudgeIndex = playerKeys.indexOf(roomData.judge);
-    const nextJudge = playerKeys[(currentJudgeIndex + 1) % playerKeys.length];
-
-    await update(ref(db, `rooms/${currentRoom}`), {
-      status: 'playing',
-      currentGreen: randomGreen,
-      judge: nextJudge,
-      submissions: null
-    });
   };
 
   if (loading) {
@@ -559,24 +618,51 @@ export default function App() {
         isCurrentJudge ? (
           <div className="w-full max-w-4xl flex flex-col items-center mb-6">
             <h3 className="text-xl font-black text-purple-300 mb-2 drop-shadow tracking-wide">SELECT THE WINNER!</h3>
-            <p className="text-zinc-300 text-xs font-bold mb-5">All submissions are in. Click any card below to award the point:</p>
+            <p className="text-zinc-300 text-xs font-bold mb-5">All submissions are in. Tap a card to pick it, then hit submit:</p>
             <div className="flex flex-wrap gap-6 justify-center">
-              {Object.entries(roomData.submissions || {}).map(([playerKey, sub]) => (
-                <div
-                  key={playerKey}
-                  onClick={() => handlePickWinner(playerKey)}
-                  className="cursor-pointer flex flex-col gap-2 max-w-xs group"
-                >
-                  <div className="flex flex-col gap-2">
-                    {sub.cards?.map((cardObj, i) => (
-                      <div key={i} className="transition-transform duration-200 hover:filter hover:drop-shadow-[0_0_22px_rgba(255,255,255,0.9)] hover:drop-shadow-[0_0_8px_rgba(255,255,255,1)]">
-                        <PurpleCard text={cardObj.text} jp={cardObj.jp} selected={false} noHover={true} />
-                      </div>
-                    ))}
+              {Object.entries(roomData.submissions || {}).map(([playerKey, sub]) => {
+                const isWinnerSelected = selectedWinnerKey === playerKey;
+                return (
+                  <div
+                    key={playerKey}
+                    onClick={() => handleSelectWinner(playerKey)}
+                    className={`cursor-pointer select-none flex flex-col gap-2 max-w-xs transition-transform duration-150 ${
+                      isWinnerSelected ? '-translate-y-1 scale-105' : 'hover:scale-[1.02]'
+                    }`}
+                  >
+                    <div className="flex flex-col gap-2">
+                      {sub.cards?.map((cardObj, i) => (
+                        <div
+                          key={i}
+                          className={`transition-all duration-150 ${
+                            isWinnerSelected
+                              ? 'filter drop-shadow-[0_0_16px_rgba(251,191,36,0.85)]'
+                              : ''
+                          }`}
+                        >
+                          <PurpleCard
+                            text={cardObj.text}
+                            jp={cardObj.jp}
+                            selected={false}
+                            noHover={true}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
+
+            {selectedWinnerKey && (
+              <div className="mt-6">
+                <SubmitButton
+                  onClick={handleConfirmWinner}
+                  disabled={submittingWinner}
+                  label="CONFIRM WINNER!"
+                />
+              </div>
+            )}
           </div>
         ) : (
           <div
