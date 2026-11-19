@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { GreenCard, PurpleCard, CardBack } from './components/Cards';
 import { db } from './firebase';
-import { ref, set, get, child, update, onValue } from 'firebase/database';
+import { ref, set, get, child, update, onValue, runTransaction } from 'firebase/database';
 
 const SHEET_ID = '1ZMeRbwlUTBUHxoF1arWMCwHg-GfAB7jmJOh5mJlJnyA';
+const HAND_SIZE = 9;
 
 export default function App() {
   const [greenCards, setGreenCards] = useState([]);
@@ -16,9 +17,8 @@ export default function App() {
   const [currentRoom, setCurrentRoom] = useState(null);
   const [roomData, setRoomData] = useState(null);
   const [joiningRoom, setJoiningRoom] = useState(false);
-  
+
   const [playerHand, setPlayerHand] = useState([]);
-  const [myDeck, setMyDeck] = useState([]);
   const [selectedCards, setSelectedCards] = useState([]);
 
   useEffect(() => {
@@ -40,8 +40,8 @@ export default function App() {
 
         const cleanPurple = purpleData
           .filter(row => row.text && row.text.toLowerCase() !== 'text')
-          .map(row => ({
-            id: row.id,
+          .map((row, idx) => ({
+            id: row.id || `p_${idx}`,
             text: row.text,
             jp: row.jp || '',
             pack: row.pack || 'Classic'
@@ -88,16 +88,40 @@ export default function App() {
       const j = Math.floor(Math.random() * (i + 1));
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
-    return arr.map(card => ({ ...card, uniqueKey: Math.random() + Math.random() }));
+    return arr.map((card, index) => ({
+      ...card,
+      uniqueKey: `${card.id || 'card'}_${Date.now()}_${index}_${Math.random().toString(36).slice(2, 7)}`
+    }));
   };
 
-  const initPlayerDeckAndHand = (allPurpleCards) => {
-    const shuffled = shuffleArray(allPurpleCards);
-    const initialHand = shuffled.slice(0, 9);
-    const remainingDeck = shuffled.slice(9);
+  // Draws `count` cards safely from the shared deck, reshuffling discardPile if needed
+  const drawFromSharedDeck = async (code, count) => {
+    const deckRef = ref(db, `rooms/${code}/deck`);
+    const discardRef = ref(db, `rooms/${code}/discardPile`);
 
-    setPlayerHand(initialHand);
-    setMyDeck(remainingDeck);
+    const discardSnap = await get(discardRef);
+    let currentDiscard = discardSnap.exists() ? discardSnap.val() || [] : [];
+
+    let drawnCards = [];
+    let didReshuffleDiscard = false;
+
+    await runTransaction(deckRef, (currentDeck) => {
+      let pool = Array.isArray(currentDeck) ? [...currentDeck] : [];
+
+      if (pool.length < count && currentDiscard.length > 0) {
+        pool = [...pool, ...shuffleArray(currentDiscard)];
+        didReshuffleDiscard = true;
+      }
+
+      drawnCards = pool.slice(0, count);
+      return pool.slice(count);
+    });
+
+    if (didReshuffleDiscard) {
+      await set(discardRef, []);
+    }
+
+    return drawnCards;
   };
 
   const handleCreateRoom = async () => {
@@ -111,11 +135,17 @@ export default function App() {
     const newCode = generateRoomCode();
     const playerKey = `p_${Date.now()}`;
 
+    const shuffledDeck = shuffleArray(purpleCards);
+    const initialHand = shuffledDeck.slice(0, HAND_SIZE);
+    const remainingDeck = shuffledDeck.slice(HAND_SIZE);
+
     try {
       await set(ref(db, `rooms/${newCode}`), {
         host: playerKey,
         status: 'lobby',
         winningScore: clampedScore,
+        deck: remainingDeck,
+        discardPile: [],
         players: {
           [playerKey]: { name: cleanName, score: 0, isHost: true }
         }
@@ -123,7 +153,7 @@ export default function App() {
       setPlayerName(cleanName);
       setTargetScore(clampedScore);
       setCurrentRoom(newCode);
-      initPlayerDeckAndHand(purpleCards);
+      setPlayerHand(initialHand);
     } catch (err) {
       console.error("Error creating room:", err);
     }
@@ -145,7 +175,9 @@ export default function App() {
     try {
       const snapshot = await get(child(dbRef, `rooms/${formattedCode}`));
       if (snapshot.exists()) {
+        const dealtHand = await drawFromSharedDeck(formattedCode, HAND_SIZE);
         const playerKey = `p_${Date.now()}`;
+
         await set(ref(db, `rooms/${formattedCode}/players/${playerKey}`), {
           name: cleanName,
           score: 0,
@@ -153,7 +185,7 @@ export default function App() {
         });
         setPlayerName(cleanName);
         setCurrentRoom(formattedCode);
-        initPlayerDeckAndHand(purpleCards);
+        setPlayerHand(dealtHand);
       } else {
         alert("Room not found! Check your code.");
         setJoiningRoom(false);
@@ -217,22 +249,22 @@ export default function App() {
 
     await set(ref(db, `rooms/${currentRoom}/submissions/${playerKey}`), {
       cards: selectedCards.map(c => ({ text: c.text, jp: c.jp })),
-      playerKey: playerKey 
+      playerKey: playerKey
     });
 
+    // Move submitted cards into the room's shared discard pile
+    const discardRef = ref(db, `rooms/${currentRoom}/discardPile`);
+    await runTransaction(discardRef, (currentDiscard) => {
+      const existing = Array.isArray(currentDiscard) ? currentDiscard : [];
+      return [...existing, ...selectedCards];
+    });
+
+    // Remove submitted cards from player's hand and draw replacements from shared deck
     const submittedKeys = selectedCards.map(c => c.uniqueKey);
-    setPlayerHand(prev => prev.filter(c => !submittedKeys.includes(c.uniqueKey)));
-    
-    let currentDeck = [...myDeck];
-    let newCardsToAdd = [];
-    for (let i = 0; i < selectedCards.length; i++) {
-      if (currentDeck.length > 0) {
-        newCardsToAdd.push(currentDeck[0]);
-        currentDeck = currentDeck.slice(1);
-      }
-    }
-    setMyDeck(currentDeck);
-    setPlayerHand(prev => [...prev, ...newCardsToAdd]);
+    const remainingHand = playerHand.filter(c => !submittedKeys.includes(c.uniqueKey));
+    const replacementCards = await drawFromSharedDeck(currentRoom, selectedCards.length);
+
+    setPlayerHand([...remainingHand, ...replacementCards]);
     setSelectedCards([]);
 
     const snapshot = await get(ref(db, `rooms/${currentRoom}`));
@@ -240,7 +272,7 @@ export default function App() {
     if (latestRoom) {
       const totalPlayers = Object.keys(latestRoom.players || {}).length;
       const submissionsCount = Object.keys(latestRoom.submissions || {}).length;
-      
+
       if (submissionsCount >= totalPlayers - 1) {
         await update(ref(db, `rooms/${currentRoom}`), { status: 'judging' });
       }
@@ -251,7 +283,7 @@ export default function App() {
     const currentScore = roomData.players[winnerKey]?.score || 0;
     const newScore = currentScore + 1;
     const gameGoal = roomData.winningScore || 7;
-    
+
     await update(ref(db, `rooms/${currentRoom}/players/${winnerKey}`), {
       score: newScore
     });
@@ -280,7 +312,7 @@ export default function App() {
   if (loading) {
     return (
       <div className="min-h-screen comic-bg flex items-center justify-center p-6">
-        <div 
+        <div
           className="comic-panel p-6 rounded-3xl flex flex-col items-center comic-glow-emerald shadow-2xl box-border gap-6 bg-[#18181f]"
           style={{ width: '480px', maxWidth: '100%' }}
         >
@@ -291,9 +323,9 @@ export default function App() {
 
           {/* GIF Frame */}
           <div className="w-full rounded-2xl border-4 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden bg-[#18181f]">
-            <img 
-              src={`${import.meta.env.BASE_URL}loading-screen.gif`} 
-              alt="Loading Judgy..." 
+            <img
+              src={`${import.meta.env.BASE_URL}loading-screen.gif`}
+              alt="Loading Judgy..."
               className="w-full h-auto block m-0 object-cover"
             />
           </div>
@@ -311,7 +343,7 @@ export default function App() {
   if (!currentRoom || !roomData) {
     return (
       <div className="min-h-screen w-full comic-bg text-white flex items-center justify-center p-4">
-        <div 
+        <div
           className="comic-panel p-8 sm:p-10 rounded-3xl flex flex-col gap-5 comic-glow-emerald shadow-2xl box-border overflow-hidden"
           style={{ width: '480px', maxWidth: '100%' }}
         >
@@ -324,9 +356,9 @@ export default function App() {
             {/* Centered Name Input */}
             <div className="w-2/3 min-w-[240px] flex flex-col items-center">
               <label className="block text-xs font-black uppercase tracking-wider text-emerald-400 mb-1 w-full text-left">Your Name</label>
-              <input 
-                type="text" 
-                placeholder="例：Steven J. Kuiya, Roxy Music, Jason Jones, etc" 
+              <input
+                type="text"
+                placeholder="例：Steven J. Kuiya, Roxy Music, Jason Jones, etc"
                 maxLength={12}
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
@@ -337,9 +369,9 @@ export default function App() {
             {/* Target Score Selector */}
             <div className="w-2/3 min-w-[240px] flex flex-col items-center">
               <label className="block text-xs font-black uppercase tracking-wider text-amber-400 mb-1 w-full text-left">Target Score to Win</label>
-              <input 
-                type="number" 
-                min={1} 
+              <input
+                type="number"
+                min={1}
                 max={15}
                 value={targetScore}
                 onChange={(e) => setTargetScore(e.target.value)}
@@ -362,9 +394,9 @@ export default function App() {
             <div className="flex items-end w-full min-w-0">
               <div className="flex flex-col w-36 sm:w-40 shrink-0">
                 <label className="block text-xs font-black uppercase tracking-wider text-purple-400 mb-1 w-full text-left">Room Code</label>
-                <input 
-                  type="text" 
-                  placeholder="CODE" 
+                <input
+                  type="text"
+                  placeholder="CODE"
                   maxLength={4}
                   value={roomCode}
                   onChange={(e) => setRoomCode(e.target.value)}
@@ -388,7 +420,7 @@ export default function App() {
 
     return (
       <div className="min-h-screen comic-bg text-white p-6 flex flex-col items-center justify-center">
-        <div 
+        <div
           className="comic-panel p-6 rounded-3xl flex flex-col box-border mx-auto comic-glow-emerald gap-6"
           style={{ width: '480px', maxWidth: '100%' }}
         >
@@ -401,7 +433,7 @@ export default function App() {
             <div className="text-right">
               <span className="text-xs text-amber-400 uppercase tracking-widest font-black">Winning Score</span>
               {isHost ? (
-                <input 
+                <input
                   type="number"
                   min={1}
                   max={15}
@@ -449,13 +481,13 @@ export default function App() {
     const goalScore = roomData.winningScore || 7;
     return (
       <div className="min-h-screen comic-bg text-white p-6 flex flex-col items-center justify-center text-center">
-        <div 
+        <div
           className="comic-panel p-8 rounded-3xl flex flex-col items-center box-border mx-auto comic-glow-gold"
           style={{ width: '480px', maxWidth: '100%' }}
         >
           <h1 className="text-3xl sm:text-4xl font-black text-amber-400 mb-3 drop-shadow-[2px_2px_0px_#000]">🏆 WE HAVE A WINNER! 🏆</h1>
           <p className="text-xl sm:text-2xl font-black text-white mb-5">{roomData.winner} reached the target of {goalScore} points!</p>
-          
+
           <div className="mb-6 bg-zinc-950 p-4 rounded-2xl border-4 border-black w-full">
             <h3 className="text-xs font-black uppercase tracking-wider text-zinc-400 mb-2.5 text-left">Final Standings</h3>
             <div className="flex flex-col gap-2">
@@ -470,7 +502,7 @@ export default function App() {
             </div>
           </div>
 
-          <button 
+          <button
             onClick={async () => {
               await update(ref(db, `rooms/${currentRoom}`), { status: 'lobby', winner: null, submissions: null });
               const resetPlayers = {};
@@ -516,8 +548,8 @@ export default function App() {
       {/* Prompt Card */}
       <div className="mb-6">
         {roomData.currentGreen && (
-          <GreenCard 
-            text={roomData.currentGreen.text} 
+          <GreenCard
+            text={roomData.currentGreen.text}
           />
         )}
       </div>
@@ -530,8 +562,8 @@ export default function App() {
             <p className="text-zinc-300 text-xs font-bold mb-5">All submissions are in. Click any card below to award the point:</p>
             <div className="flex flex-wrap gap-6 justify-center">
               {Object.entries(roomData.submissions || {}).map(([playerKey, sub]) => (
-                <div 
-                  key={playerKey} 
+                <div
+                  key={playerKey}
                   onClick={() => handlePickWinner(playerKey)}
                   className="cursor-pointer flex flex-col gap-2 max-w-xs group"
                 >
@@ -547,7 +579,7 @@ export default function App() {
             </div>
           </div>
         ) : (
-          <div 
+          <div
             className="comic-panel text-center p-6 rounded-3xl mb-6 comic-glow-purple box-border mx-auto"
             style={{ width: '480px', maxWidth: '100%' }}
           >
@@ -558,7 +590,7 @@ export default function App() {
       ) : isCurrentJudge ? (
         // --- JUDGE WAITING SCREEN ---
         <div className="w-full max-w-4xl flex flex-col items-center mb-6">
-          <div 
+          <div
             className="comic-panel text-center p-5 rounded-3xl mb-5 comic-glow-purple box-border mx-auto"
             style={{ width: '480px', maxWidth: '100%' }}
           >
@@ -582,7 +614,7 @@ export default function App() {
       ) : hasSubmitted ? (
         // --- PLAYER WAITING SCREEN ---
         <div className="w-full max-w-4xl flex flex-col items-center mb-6">
-          <div 
+          <div
             className="comic-panel text-center p-5 rounded-3xl mb-5 comic-glow-emerald box-border mx-auto"
             style={{ width: '480px', maxWidth: '100%' }}
           >
@@ -612,8 +644,8 @@ export default function App() {
               const isSelected = selectedIndex !== -1;
               return (
                 <div key={card.uniqueKey} className="relative">
-                  <PurpleCard 
-                    text={card.text} 
+                  <PurpleCard
+                    text={card.text}
                     jp={card.jp}
                     pack={card.pack}
                     selected={isSelected}
@@ -627,9 +659,9 @@ export default function App() {
 
           {selectedCards.length === requiredPick && (
             <div className="mt-6">
-              <SubmitButton 
-                onClick={handleSubmitCard} 
-                label={requiredPick > 1 ? 'SUBMIT COMBO!' : 'SUBMIT CARD!'} 
+              <SubmitButton
+                onClick={handleSubmitCard}
+                label={requiredPick > 1 ? 'SUBMIT COMBO!' : 'SUBMIT CARD!'}
               />
             </div>
           )}
@@ -647,9 +679,9 @@ function HostLobbyButton({ onClick }) {
       onClick={onClick}
       className="group relative border-none bg-transparent p-0 transition-transform duration-150 select-none hover:scale-105 active:scale-95 cursor-pointer inline-flex items-center justify-center"
     >
-      <img 
-        src={`${import.meta.env.BASE_URL}host-lobby-button.png`} 
-        alt="Host Lobby" 
+      <img
+        src={`${import.meta.env.BASE_URL}host-lobby-button.png`}
+        alt="Host Lobby"
         className="w-40 sm:w-48 h-auto drop-shadow-[4px_4px_0px_rgba(0,0,0,1)] transition-all"
       />
     </button>
@@ -668,9 +700,9 @@ function JoinRoomButton({ onClick, disabled = false }) {
           : 'hover:scale-105 active:scale-95 cursor-pointer'
       }`}
     >
-      <img 
-        src={`${import.meta.env.BASE_URL}join-room-button.png`} 
-        alt="Join Room" 
+      <img
+        src={`${import.meta.env.BASE_URL}join-room-button.png`}
+        alt="Join Room"
         className="w-32 sm:w-38 h-auto drop-shadow-[4px_4px_0px_rgba(0,0,0,1)] transition-all"
       />
     </button>
@@ -685,9 +717,9 @@ function StartGameButton({ onClick }) {
       onClick={onClick}
       className="group relative border-none bg-transparent p-0 transition-transform duration-150 select-none hover:scale-105 active:scale-95 cursor-pointer inline-flex items-center justify-center"
     >
-      <img 
-        src={`${import.meta.env.BASE_URL}start-game-button.png`} 
-        alt="Start Game" 
+      <img
+        src={`${import.meta.env.BASE_URL}start-game-button.png`}
+        alt="Start Game"
         className="w-44 sm:w-52 h-auto drop-shadow-[5px_5px_0px_rgba(0,0,0,1)] transition-all"
       />
     </button>
@@ -707,9 +739,9 @@ function SubmitButton({ onClick, disabled, label = "SUBMIT CARD!" }) {
           : 'hover:scale-105 active:scale-95 cursor-pointer animate-bounce'
       }`}
     >
-      <img 
-        src={`${import.meta.env.BASE_URL}submit-card-button.png`} 
-        alt={label} 
+      <img
+        src={`${import.meta.env.BASE_URL}submit-card-button.png`}
+        alt={label}
         className="w-44 sm:w-52 h-auto drop-shadow-[5px_5px_0px_rgba(0,0,0,1)] transition-all"
       />
     </button>
