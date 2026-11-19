@@ -101,11 +101,13 @@ export default function App() {
   };
 
   const handleCreateRoom = async () => {
-    if (!playerName.trim()) {
+    const cleanName = playerName.trim().slice(0, 12);
+    if (!cleanName) {
       alert("Please enter your name first!");
       return;
     }
 
+    const clampedScore = Math.max(1, Math.min(15, Number(targetScore) || 7));
     const newCode = generateRoomCode();
     const playerKey = `p_${Date.now()}`;
 
@@ -113,11 +115,13 @@ export default function App() {
       await set(ref(db, `rooms/${newCode}`), {
         host: playerKey,
         status: 'lobby',
-        winningScore: Number(targetScore) || 7,
+        winningScore: clampedScore,
         players: {
-          [playerKey]: { name: playerName, score: 0, isHost: true }
+          [playerKey]: { name: cleanName, score: 0, isHost: true }
         }
       });
+      setPlayerName(cleanName);
+      setTargetScore(clampedScore);
       setCurrentRoom(newCode);
       initPlayerDeckAndHand(purpleCards);
     } catch (err) {
@@ -128,7 +132,8 @@ export default function App() {
   const handleJoinRoom = async () => {
     if (joiningRoom) return;
 
-    if (!playerName.trim() || !roomCode.trim()) {
+    const cleanName = playerName.trim().slice(0, 12);
+    if (!cleanName || !roomCode.trim()) {
       alert("Please enter your name and a room code!");
       return;
     }
@@ -142,10 +147,11 @@ export default function App() {
       if (snapshot.exists()) {
         const playerKey = `p_${Date.now()}`;
         await set(ref(db, `rooms/${formattedCode}/players/${playerKey}`), {
-          name: playerName,
+          name: cleanName,
           score: 0,
           isHost: false
         });
+        setPlayerName(cleanName);
         setCurrentRoom(formattedCode);
         initPlayerDeckAndHand(purpleCards);
       } else {
@@ -174,7 +180,7 @@ export default function App() {
   };
 
   const handleUpdateWinningScore = async (newScore) => {
-    const scoreNum = Math.max(1, Math.min(20, Number(newScore) || 7));
+    const scoreNum = Math.max(1, Math.min(15, Number(newScore) || 7));
     setTargetScore(scoreNum);
     if (currentRoom) {
       await update(ref(db, `rooms/${currentRoom}`), {
@@ -321,6 +327,7 @@ export default function App() {
               <input 
                 type="text" 
                 placeholder="例：Steven J. Kuiya, Roxy Music, Jason Jones, etc" 
+                maxLength={12}
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
                 className="w-full max-w-full box-border bg-zinc-900 border-4 border-black rounded-xl px-3.5 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 font-bold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
@@ -333,7 +340,7 @@ export default function App() {
               <input 
                 type="number" 
                 min={1} 
-                max={20}
+                max={15}
                 value={targetScore}
                 onChange={(e) => setTargetScore(e.target.value)}
                 className="w-full box-border bg-zinc-900 border-4 border-black rounded-xl px-3.5 py-2.5 text-white font-black text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:border-amber-400 text-center"
@@ -397,7 +404,7 @@ export default function App() {
                 <input 
                   type="number"
                   min={1}
-                  max={20}
+                  max={15}
                   value={roomData.winningScore || 7}
                   onChange={(e) => handleUpdateWinningScore(e.target.value)}
                   className="w-20 bg-zinc-900 border-2 border-black rounded-lg text-amber-400 font-black text-lg text-center px-2 py-0.5 mt-1 focus:outline-none focus:border-amber-400"
