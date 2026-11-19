@@ -15,6 +15,7 @@ export default function App() {
   const [targetScore, setTargetScore] = useState(7);
   const [currentRoom, setCurrentRoom] = useState(null);
   const [roomData, setRoomData] = useState(null);
+  const [joiningRoom, setJoiningRoom] = useState(false);
   
   const [playerHand, setPlayerHand] = useState([]);
   const [myDeck, setMyDeck] = useState([]);
@@ -125,6 +126,8 @@ export default function App() {
   };
 
   const handleJoinRoom = async () => {
+    if (joiningRoom) return;
+
     if (!playerName.trim() || !roomCode.trim()) {
       alert("Please enter your name and a room code!");
       return;
@@ -132,6 +135,7 @@ export default function App() {
 
     const formattedCode = roomCode.toUpperCase().trim();
     const dbRef = ref(db);
+    setJoiningRoom(true);
 
     try {
       const snapshot = await get(child(dbRef, `rooms/${formattedCode}`));
@@ -146,9 +150,11 @@ export default function App() {
         initPlayerDeckAndHand(purpleCards);
       } else {
         alert("Room not found! Check your code.");
+        setJoiningRoom(false);
       }
     } catch (err) {
       console.error("Error joining room:", err);
+      setJoiningRoom(false);
     }
   };
 
@@ -359,7 +365,7 @@ export default function App() {
                 />
               </div>
               <div className="flex shrink-0" style={{ marginLeft: '-60px' }}>
-                <JoinRoomButton onClick={handleJoinRoom} />
+                <JoinRoomButton onClick={handleJoinRoom} disabled={joiningRoom} />
               </div>
             </div>
           </div>
@@ -643,12 +649,17 @@ function HostLobbyButton({ onClick }) {
   );
 }
 
-function JoinRoomButton({ onClick }) {
+function JoinRoomButton({ onClick, disabled = false }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="group relative border-none bg-transparent p-0 transition-transform duration-150 select-none hover:scale-105 active:scale-95 cursor-pointer inline-flex items-center justify-center"
+      disabled={disabled}
+      className={`group relative border-none bg-transparent p-0 transition-transform duration-150 select-none inline-flex items-center justify-center ${
+        disabled
+          ? 'opacity-50 cursor-not-allowed grayscale'
+          : 'hover:scale-105 active:scale-95 cursor-pointer'
+      }`}
     >
       <img 
         src={`${import.meta.env.BASE_URL}join-room-button.png`} 
