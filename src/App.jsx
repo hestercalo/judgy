@@ -372,7 +372,7 @@ export default function App() {
     return (
       <div className="min-h-screen comic-bg flex items-center justify-center p-6">
         <div
-          className="comic-panel p-6 rounded-3xl flex flex-col items-center comic-glow-emerald shadow-2xl box-border gap-6 bg-[#18181f]"
+          className="comic-panel p-6 rounded-3xl flex flex-col items-center comic-glow-amber shadow-2xl box-border gap-6 bg-[#18181f]"
           style={{ width: '480px', maxWidth: '100%' }}
         >
           {/* Header Title */}
@@ -403,7 +403,7 @@ export default function App() {
     return (
       <div className="min-h-screen w-full comic-bg text-white flex items-center justify-center p-4">
         <div
-          className="comic-panel p-8 sm:p-10 rounded-3xl flex flex-col gap-5 comic-glow-emerald shadow-2xl box-border overflow-hidden"
+          className="comic-panel p-8 sm:p-10 rounded-3xl flex flex-col gap-5 comic-glow-amber shadow-2xl box-border overflow-hidden"
           style={{ width: '480px', maxWidth: '100%' }}
         >
           <div className="text-center">
@@ -421,7 +421,7 @@ export default function App() {
                 maxLength={12}
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
-                className="w-full max-w-full box-border bg-zinc-900 border-4 border-black rounded-xl px-3.5 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 font-bold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+                className="w-full max-w-full box-border bg-zinc-900 border-4 border-black rounded-xl px-3.5 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-emerald-400/30 font-bold text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
               />
             </div>
 
@@ -480,7 +480,7 @@ export default function App() {
     return (
       <div className="min-h-screen comic-bg text-white p-6 flex flex-col items-center justify-center">
         <div
-          className="comic-panel p-6 rounded-3xl flex flex-col box-border mx-auto comic-glow-emerald gap-6"
+          className="comic-panel p-6 rounded-3xl flex flex-col box-border mx-auto comic-glow-amber gap-6"
           style={{ width: '480px', maxWidth: '100%' }}
         >
           {/* Top Section: Room Code & Winning Score */}
@@ -587,7 +587,7 @@ export default function App() {
   const totalPlayersCount = Object.keys(roomData.players || {}).length;
   const submissionsCount = Object.keys(roomData.submissions || {}).length;
 
-  const phaseGlowClass = roomData.status === 'judging' ? 'comic-glow-purple' : 'comic-glow-emerald';
+  const phaseGlowClass = roomData.status === 'judging' ? 'comic-glow-purple' : 'comic-glow-amber';
 
   return (
     <div className="min-h-screen comic-bg text-white p-6 flex flex-col items-center">
@@ -701,7 +701,7 @@ export default function App() {
         // --- PLAYER WAITING SCREEN ---
         <div className="w-full max-w-4xl flex flex-col items-center mb-6">
           <div
-            className="comic-panel text-center p-5 rounded-3xl mb-5 comic-glow-emerald box-border mx-auto"
+            className="comic-panel text-center p-5 rounded-3xl mb-5 comic-glow-amber box-border mx-auto"
             style={{ width: '480px', maxWidth: '100%' }}
           >
             <h3 className="text-lg font-black text-emerald-300 mb-1.5">COMBO SUBMITTED!</h3>
