@@ -130,13 +130,12 @@ export function PurpleCard({ text, jp, selected, onClick, noHover = false }) {
       `}</style>
 
       {/* Top Bar: JP/EN Toggle Badge */}
-      <div style={{ position: 'absolute', top: '10px', right: '10px' }} className="z-30 font-sans">
+      <div style={{ position: 'absolute', bottom: '10px', right: '10px' }} className="z-30 font-sans">
         {jp && (
           <button
             type="button"
             onClick={toggleJp}
-            className={`text-base font-black px-4 py-1.5 rounded-full border-3 border-black shadow-lg transition-transform duration-150 active:scale-95 ${
-              showJp 
+            className={`min-w-[4.5rem] min-h-[3.5rem] flex items-center justify-center text-2xl font-black px-5 py-2.5 rounded-full border-3 border-black shadow-lg transition-transform duration-150 active:scale-95 ${                showJp 
                 ? 'bg-purple-600 text-yellow-300 border-black' 
                 : 'bg-yellow-400 text-black hover:bg-yellow-300'
             }`}
