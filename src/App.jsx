@@ -592,7 +592,7 @@ export default function App() {
   return (
     <div className="min-h-screen comic-bg text-white p-6 flex flex-col items-center">
       {/* Header & Scoreboard */}
-      <div className={`w-full max-w-4xl flex justify-between items-center mb-6 comic-panel px-5 py-3.5 rounded-2xl ${phaseGlowClass}`}>
+      <div className={`w-full max-w-4xl flex justify-between items-center mb-6 comic-panel px-5 py-3.5 rounded-2xl${phaseGlowClass}`}>
         <span className="text-emerald-400 font-black text-xs tracking-wider">ROOM: {currentRoom} (Goal: {roomData.winningScore || 7})</span>
         <div className="flex gap-2 items-center flex-wrap justify-center">
           {Object.values(roomData.players || {}).map((p, idx) => (
@@ -680,7 +680,7 @@ export default function App() {
             className="comic-panel text-center p-5 rounded-3xl mb-5 comic-glow-purple box-border mx-auto"
             style={{ width: '480px', maxWidth: '100%' }}
           >
-            <h3 className="text-lg font-black text-purple-300 mb-1.5">YOU ARE THE JUDGE! 👑</h3>
+            <h3 className="text-lg font-black text-purple-300 mb-1.5">YOU ARE THE JUDGE!</h3>
             <p className="text-zinc-200 text-xs font-bold mb-2.5">Waiting for players to submit their cards...</p>
             <div className="text-xs font-black text-amber-400 bg-purple-900 border-2 border-black px-3.5 py-1 rounded-full inline-block">
               Submissions: {submissionsCount} / {totalPlayersCount - 1}
@@ -704,7 +704,7 @@ export default function App() {
             className="comic-panel text-center p-5 rounded-3xl mb-5 comic-glow-emerald box-border mx-auto"
             style={{ width: '480px', maxWidth: '100%' }}
           >
-            <h3 className="text-lg font-black text-emerald-300 mb-1.5">COMBO SUBMITTED! ✅</h3>
+            <h3 className="text-lg font-black text-emerald-300 mb-1.5">COMBO SUBMITTED!</h3>
             <p className="text-zinc-200 text-xs font-bold">Waiting for other players and the judge...</p>
             <div className="text-xs text-emerald-400 font-black mt-1.5">
               Submissions: {submissionsCount} / {totalPlayersCount - 1}
