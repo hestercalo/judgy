@@ -1,22 +1,90 @@
-# React + Vite
+# Judgy
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+### An English Learning Card Game for Students
 
-Currently, two official plugins are available:
+[**Play Judgy**](https://judgy-game.vercel.app/) | [**View Source Code**](https://github.com/hestercalo/judgy)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Overview
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Judgy is a web-based card game designed to make learning English more engaging, interactive, and enjoyable for students.
 
-## Expanding the Oxlint configuration
+Originally conceived for use in English classes at middle schools in rural Japan, the project combines elements of popular party card games with English-language learning activities.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+The game is designed to encourage students to engage with English in a relaxed, entertaining environment, making language practice feel less like a traditional classroom exercise and more like a game.
 
-## Afterword
+## Project Background
 
-This app was inspired by popular party card games such as Cards Against Humanity and Apples to Apples. It was created primarily for use in middle school English classes in rural Japan.
+I created Judgy after identifying a need for more engaging and accessible English-learning activities in the classroom.
 
-This project is strictly for educational, non-commercial purposes. If any content or motifs within the game are deemed inappropriate or need revision, please contact me and they will be swiftly removed.
+It was originally a physical card game for 3 years before I noticed that it would do much better as a standalone web-app.
+
+The project involved:
+
+- Developing the original game concept and mechanics
+- Designing the rules and gameplay experience
+- Writing and developing the card prompts and content
+- Designing the visual presentation and user interface
+- Using generative AI (Google Gemini) to assist with the technical implementation
+- Bringing the project from an initial concept to a functioning web application
+
+The project was independently conceived and designed, with AI-assisted development used to help implement the application.
+
+## Educational Use
+
+Judgy was originally designed for English-language instruction in Japanese schools.
+
+It has since been introduced and used at multiple schools throughout Yuzawa City, including high schools.
+
+The project demonstrates how an original idea can be developed into a practical educational resource and implemented in real classroom environments.
+
+## Technologies
+
+- React
+- Vite
+- Tailwind CSS
+- Firebase
+- JavaScript
+
+Generative AI tools were also used to assist with development.
+
+## Live Application
+
+**[https://judgy-game.vercel.app/](https://judgy-game.vercel.app/)**
+
+## Development
+
+To run the project locally:
+
+```bash
+# Clone the repository
+git clone https://github.com/hestercalo/judgy.git
+
+# Navigate into the project directory
+cd judgy
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm run dev
+```
+
+To create a production build:
+
+```bash
+npm run build
+```
+
+## Purpose and Licensing
+
+Judgy was created for educational, non-commercial use.
+
+The project was inspired by popular party card games and adapted for English-language learning in Japanese educational settings.
+
+If any content or game elements are considered inappropriate for the intended educational environment, please contact me so they can be reviewed.
+
+---
+
+**Created and designed independently by Owen Hester.**
