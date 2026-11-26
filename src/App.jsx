@@ -561,7 +561,7 @@ export default function App() {
             </div>
           </div>
 
-          <button
+          <PlayAgainButton
             onClick={async () => {
               await update(ref(db, `rooms/${currentRoom}`), { status: 'lobby', winner: null, submissions: null });
               const resetPlayers = {};
@@ -570,10 +570,7 @@ export default function App() {
               });
               await update(ref(db, `rooms/${currentRoom}/players`), resetPlayers);
             }}
-            className="bg-amber-400 hover:bg-amber-300 text-black font-black py-2.5 px-6 rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-base transition-all active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer"
-          >
-            PLAY AGAIN
-          </button>
+          />
         </div>
       </div>
     );
@@ -769,6 +766,27 @@ function HostLobbyButton({ onClick }) {
         src={`${import.meta.env.BASE_URL}host-lobby-button.png`}
         alt="Host Lobby"
         className="w-40 sm:w-48 h-auto drop-shadow-[4px_4px_0px_rgba(0,0,0,1)] transition-all"
+      />
+    </button>
+  );
+}
+
+function PlayAgainButton({ onClick, disabled = false }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`group relative border-none bg-transparent p-0 transition-transform duration-150 select-none inline-flex items-center justify-center ${
+        disabled
+          ? 'opacity-50 cursor-not-allowed grayscale'
+          : 'hover:scale-105 active:scale-95 cursor-pointer'
+      }`}
+    >
+      <img
+        src={`${import.meta.env.BASE_URL}play-again-button.png`}
+        alt="Play Again"
+        className="w-44 sm:w-52 h-auto drop-shadow-[5px_5px_0px_rgba(0,0,0,1)] transition-all"
       />
     </button>
   );
