@@ -9,6 +9,7 @@ const HAND_SIZE = 9;
 export default function App() {
   const [greenCards, setGreenCards] = useState([]);
   const [purpleCards, setPurpleCards] = useState([]);
+  const [availablePacks, setAvailablePacks] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [playerName, setPlayerName] = useState('');
@@ -37,7 +38,7 @@ export default function App() {
             id: row.id || `g_${idx}`,
             text: row.text,
             pick: Number(row.pick) || 1,
-            pack: row.pack || 'Classic'
+            pack: (row.pack || 'Classic').trim()
           }));
 
         const cleanPurple = purpleData
@@ -46,9 +47,15 @@ export default function App() {
             id: row.id || `p_${idx}`,
             text: row.text,
             jp: row.jp || '',
-            pack: row.pack || 'Classic'
+            pack: (row.pack || 'Classic').trim()
           }));
 
+        const packSet = new Set([
+          ...cleanGreen.map(c => c.pack),
+          ...cleanPurple.map(c => c.pack)
+        ].filter(Boolean));
+
+        setAvailablePacks(Array.from(packSet));
         setGreenCards(cleanGreen);
         setPurpleCards(cleanPurple);
         setLoading(false);
@@ -71,11 +78,16 @@ export default function App() {
         setSelectedCards([]);
         setSelectedWinnerKey(null);
         setSubmittingWinner(false);
+
+        const myEntry = Object.values(data.players || {}).find(p => p.name === playerName);
+        if (myEntry?.initialHand && Array.isArray(myEntry.initialHand)) {
+          setPlayerHand(myEntry.initialHand);
+        }
       }
     });
 
     return () => unsubscribe();
-  }, [currentRoom]);
+  }, [currentRoom, playerName]);
 
   const generateRoomCode = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -174,19 +186,15 @@ export default function App() {
     const newCode = generateRoomCode();
     const playerKey = `p_${Date.now()}`;
 
-    const shuffledPurple = shuffleArray(purpleCards);
-    const initialHand = shuffledPurple.slice(0, HAND_SIZE);
-    const remainingPurpleDeck = shuffledPurple.slice(HAND_SIZE);
-    const shuffledGreenDeck = shuffleArray(greenCards);
-
     try {
       await set(ref(db, `rooms/${newCode}`), {
         host: playerKey,
         status: 'lobby',
         winningScore: clampedScore,
-        deck: remainingPurpleDeck,
+        selectedPacks: availablePacks,
+        deck: [],
         discardPile: [],
-        greenDeck: shuffledGreenDeck,
+        greenDeck: [],
         greenDiscard: [],
         players: {
           [playerKey]: { name: cleanName, score: 0, isHost: true }
@@ -195,7 +203,7 @@ export default function App() {
       setPlayerName(cleanName);
       setTargetScore(clampedScore);
       setCurrentRoom(newCode);
-      setPlayerHand(initialHand);
+      setPlayerHand([]);
     } catch (err) {
       console.error("Error creating room:", err);
     }
@@ -217,7 +225,6 @@ export default function App() {
     try {
       const snapshot = await get(child(dbRef, `rooms/${formattedCode}`));
       if (snapshot.exists()) {
-        const dealtHand = await drawFromSharedDeck(formattedCode, HAND_SIZE);
         const playerKey = `p_${Date.now()}`;
 
         await set(ref(db, `rooms/${formattedCode}/players/${playerKey}`), {
@@ -227,7 +234,7 @@ export default function App() {
         });
         setPlayerName(cleanName);
         setCurrentRoom(formattedCode);
-        setPlayerHand(dealtHand);
+        setPlayerHand([]);
       } else {
         alert("Room not found! Check your code.");
         setJoiningRoom(false);
@@ -238,15 +245,73 @@ export default function App() {
     }
   };
 
+  const handleTogglePack = async (packName) => {
+    if (!currentRoom || !roomData) return;
+    const currentSelected = Array.isArray(roomData.selectedPacks)
+      ? roomData.selectedPacks
+      : availablePacks;
+
+    const isAlreadySelected = currentSelected.includes(packName);
+    if (isAlreadySelected && currentSelected.length === 1) {
+      return;
+    }
+
+    const updatedPacks = isAlreadySelected
+      ? currentSelected.filter(p => p !== packName)
+      : [...currentSelected, packName];
+
+    await update(ref(db, `rooms/${currentRoom}`), {
+      selectedPacks: updatedPacks
+    });
+  };
+
   const handleStartGame = async () => {
-    if (greenCards.length === 0) return;
-    const nextGreen = await drawNextGreenCard(currentRoom, roomData?.currentGreen || null);
-    const playerKeys = Object.keys(roomData.players);
+    const activePacks = Array.isArray(roomData.selectedPacks) && roomData.selectedPacks.length > 0
+      ? roomData.selectedPacks
+      : availablePacks;
+
+    const filteredGreen = greenCards.filter(c => activePacks.includes(c.pack));
+    const filteredPurple = purpleCards.filter(c => activePacks.includes(c.pack));
+
+    const playerKeys = Object.keys(roomData.players || {});
+    const neededPurpleCards = playerKeys.length * HAND_SIZE;
+
+    if (filteredGreen.length === 0) {
+      alert("Selected packs have 0 Green prompt cards! Please enable another pack.");
+      return;
+    }
+    if (filteredPurple.length < neededPurpleCards) {
+      alert(`Not enough Purple cards (${filteredPurple.length}) for ${playerKeys.length} players! Select more packs.`);
+      return;
+    }
+
+    const shuffledGreen = shuffleArray(filteredGreen);
+    const nextGreen = shuffledGreen[0];
+    const remainingGreenDeck = shuffledGreen.slice(1);
+
+    let shuffledPurple = shuffleArray(filteredPurple);
+    const updatedPlayers = {};
+
+    playerKeys.forEach((key) => {
+      const dealt = shuffledPurple.slice(0, HAND_SIZE);
+      shuffledPurple = shuffledPurple.slice(HAND_SIZE);
+      updatedPlayers[key] = {
+        ...roomData.players[key],
+        score: 0,
+        initialHand: dealt
+      };
+    });
+
     const randomJudge = playerKeys[Math.floor(Math.random() * playerKeys.length)];
 
     await update(ref(db, `rooms/${currentRoom}`), {
       status: 'playing',
       currentGreen: nextGreen,
+      greenDeck: remainingGreenDeck,
+      greenDiscard: [],
+      deck: shuffledPurple,
+      discardPile: [],
+      players: updatedPlayers,
       judge: randomJudge,
       submissions: null,
       winner: null
@@ -292,6 +357,11 @@ export default function App() {
     await set(ref(db, `rooms/${currentRoom}/submissions/${playerKey}`), {
       cards: selectedCards.map(c => ({ text: c.text, jp: c.jp })),
       playerKey: playerKey
+    });
+
+    // Clear initialHand snapshot so subsequent draws aren't overwritten
+    await update(ref(db, `rooms/${currentRoom}/players/${playerKey}`), {
+      initialHand: null
     });
 
     // Move submitted cards into the room's shared discard pile
@@ -375,12 +445,10 @@ export default function App() {
           className="comic-panel p-6 rounded-3xl flex flex-col items-center comic-glow-gold shadow-2xl box-border gap-6 bg-[#18181f]"
           style={{ width: '480px', maxWidth: '100%' }}
         >
-          {/* Header Title */}
           <div className="text-center w-full">
             <h2 className="text-2xl font-black tracking-widest text-emerald-400 drop-shadow-[2px_2px_0px_#000]">LOADING GAME</h2>
           </div>
 
-          {/* GIF Frame */}
           <div className="w-full rounded-2xl border-4 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden bg-[#18181f]">
             <img
               src={`${import.meta.env.BASE_URL}loading-screen.gif`}
@@ -389,7 +457,6 @@ export default function App() {
             />
           </div>
 
-          {/* Loading Status Box */}
           <div className="text-center text-emerald-300 font-bold bg-zinc-900 border-4 border-black p-3.5 rounded-2xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] w-full box-border text-sm animate-pulse">
             Getting things ready...
           </div>
@@ -417,7 +484,7 @@ export default function App() {
               <label className="block text-xs font-black uppercase tracking-wider text-emerald-400 mb-1 w-full text-left">Your Name</label>
               <input
                 type="text"
-                placeholder="例：Steven J. Kuiya, Roxy Music, Jason Jones, etc"
+                placeholder="Steven J. Kuiya, Roxy Music, etc."
                 maxLength={12}
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
@@ -476,6 +543,9 @@ export default function App() {
   if (roomData.status === 'lobby') {
     const myPlayerEntry = Object.entries(roomData.players || {}).find(([_, p]) => p.name === playerName);
     const isHost = myPlayerEntry ? myPlayerEntry[1].isHost : false;
+    const activePacks = Array.isArray(roomData.selectedPacks) && roomData.selectedPacks.length > 0
+      ? roomData.selectedPacks
+      : availablePacks;
 
     return (
       <div className="min-h-screen comic-bg text-white p-6 flex flex-col items-center justify-center">
@@ -509,12 +579,60 @@ export default function App() {
           {/* Divider Line */}
           <div className="border-t-4 border-zinc-800 w-full"></div>
 
+          {/* Card Packs Selector */}
+          <div className="flex flex-col w-full">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-xs font-black text-zinc-300 uppercase tracking-wider">
+                Card Packs ({activePacks.length} Active)
+              </h3>
+             {isHost && availablePacks.length > 0 && (
+              <button
+               type="button"
+               onClick={() =>
+               update(ref(db, `rooms/${currentRoom}`), { selectedPacks: availablePacks })
+               }
+            style={{ color: '#ffffff', fontFamily: 'inherit' }}
+            className="text-xs font-black tracking-wide bg-transparent border-none p-0 cursor-pointer hover:opacity-80"
+              >
+              Select All
+              </button>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-2 w-full">
+              {availablePacks.map((pack) => {
+                const isSelected = activePacks.includes(pack);
+                const gCount = greenCards.filter(c => c.pack === pack).length;
+                const pCount = purpleCards.filter(c => c.pack === pack).length;
+
+                return (
+                  <button
+                    key={pack}
+                    type="button"
+                    disabled={!isHost}
+                    onClick={() => isHost && handleTogglePack(pack)}
+                    className={`px-3 py-1.5 rounded-xl border-2 border-black text-xs font-black transition-all flex items-center gap-1.5 ${
+                      isSelected
+                        ? 'bg-purple-600 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
+                        : 'bg-zinc-900 text-zinc-500 opacity-60'
+                    } ${isHost ? 'cursor-pointer hover:scale-105 active:scale-95' : 'cursor-default'}`}
+                  >
+                    <span>{isSelected ? '✓' : '+'} {pack}</span>
+                    <span className="text-[10px] opacity-80 font-bold">
+                      ({gCount}G / {pCount}P)
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Bottom Section: Players List & Start Button */}
           <div className="flex flex-col items-center w-full">
             <h3 className="text-xs font-black text-zinc-300 uppercase tracking-wider mb-3 w-full text-left">Players in Lobby:</h3>
             <ul className="flex flex-col gap-2.5 mb-5 w-full items-center box-border">
               {Object.values(roomData.players || {}).map((p, idx) => (
-                <li key={idx} className="bg-zinc-900 px-4 py-3 rounded-2xl border-4 border-black flex items-center justify-between shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] w-full max-w-4/5  mx-auto box-border">
+                <li key={idx} className="bg-zinc-900 px-4 py-3 rounded-2xl border-4 border-black flex items-center justify-between shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] w-full max-w-4/5 mx-auto box-border">
                   <span className="font-bold text-white text-sm truncate pr-2">{p.name} {p.isHost && '👑'}</span>
                 </li>
               ))}
@@ -544,7 +662,7 @@ export default function App() {
           className="comic-panel p-8 rounded-3xl flex flex-col items-center box-border mx-auto comic-glow-gold"
           style={{ width: '480px', maxWidth: '100%' }}
         >
-          <h1 className="text-3xl sm:text-4xl font-black text-amber-400 mb-3 drop-shadow-[2px_2px_0px_#000]">🏆 WE HAVE A WINNER! 🏆</h1>
+          <h1 className="text-3xl sm:text-4xl font-black text-amber-400 mb-3 drop-shadow-[2px_2px_0px_#000]">WE HAVE A WINNER!</h1>
           <p className="text-xl sm:text-2xl font-black text-white mb-5">{roomData.winner} reached the target of {goalScore} points!</p>
 
           <div className="mb-6 bg-zinc-950 p-4 rounded-2xl border-4 border-black w-full">
@@ -566,7 +684,7 @@ export default function App() {
               await update(ref(db, `rooms/${currentRoom}`), { status: 'lobby', winner: null, submissions: null });
               const resetPlayers = {};
               Object.entries(roomData.players || {}).forEach(([k, p]) => {
-                resetPlayers[k] = { ...p, score: 0 };
+                resetPlayers[k] = { ...p, score: 0, initialHand: null };
               });
               await update(ref(db, `rooms/${currentRoom}/players`), resetPlayers);
             }}
@@ -589,7 +707,7 @@ export default function App() {
   return (
     <div className="min-h-screen comic-bg text-white p-6 flex flex-col items-center">
       {/* Header & Scoreboard */}
-      <div className={`w-full max-w-4xl flex justify-between items-center mb-6 comic-panel px-5 py-3.5 rounded-2xl${phaseGlowClass}`}>
+      <div className={`w-full max-w-4xl flex justify-between items-center mb-6 comic-panel px-5 py-3.5 rounded-2xl ${phaseGlowClass}`}>
         <span className="text-emerald-400 font-black text-xs tracking-wider">ROOM: {currentRoom} (Goal: {roomData.winningScore || 7})</span>
         <div className="flex gap-2 items-center flex-wrap justify-center">
           {Object.values(roomData.players || {}).map((p, idx) => (
@@ -830,7 +948,7 @@ function StartGameButton({ onClick }) {
   );
 }
 
-// --- COMIC-STYLED IMAGE SUBMIT BUTTON COMPONENT ---
+// --- CUSTOM SUBMIT BUTTON COMPONENT ---
 function SubmitButton({ onClick, disabled, label = "SUBMIT CARD!" }) {
   return (
     <button
@@ -846,7 +964,7 @@ function SubmitButton({ onClick, disabled, label = "SUBMIT CARD!" }) {
       <img
         src={`${import.meta.env.BASE_URL}submit-card-button.png`}
         alt={label}
-        className="w-44 sm:w-52 h-auto drop-shadow-[5px_5px_0px_rgba(0,0,0,1)] transition-all"
+        className="w-44 sm:w-52 h-auto drop-shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] transition-all"
       />
     </button>
   );
