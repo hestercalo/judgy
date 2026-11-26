@@ -46,6 +46,7 @@ The project demonstrates how an original idea can be developed into a practical 
 - Tailwind CSS
 - Firebase
 - JavaScript
+- Canva (All art within the game is custom and designed by me)
 
 Generative AI tools were also used to assist with development.
 
@@ -81,7 +82,7 @@ npm run build
 
 Judgy was created for educational, non-commercial use.
 
-The project was inspired by popular party card games and adapted for English-language learning in Japanese educational settings.
+The project was inspired by popular party card games such as Cards Against Humanity and Apples to Apples and adapted for English-language learning in Japanese educational settings.
 
 If any content or game elements are considered inappropriate for the intended educational environment, please contact me so they can be reviewed.
 
